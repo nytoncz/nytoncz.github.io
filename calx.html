@@ -1,1 +1,168 @@
+<!DOCTYPE html><html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔢calx</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  font-weight: bold;
+  background: #111;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}.calculator { width: 100%; max-width: 360px; padding: 10px; }
 
+.display { background: #5c5c5c; padding: 20px; font-size: 1.3em; text-shadow: #000 3px 3px 9px; text-align: right; border-radius: 10px; margin-bottom: 10px; min-height: 60px; overflow-x: auto; white-space: nowrap; }
+
+.buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }
+
+button { padding: 20px; font-size: 1.2em; border: none; border-radius: 5px; background: #5c5c5c; color: white;font-size: 1.5em; text-shadow: #000 3px 3px 9px;}
+
+button.operator { background: #708993; } button.equal { background: #758d80; } button.clear { background: #a48363; } button.history { background: #333; grid-column: span 2; } button.backspace { background: #a48363; }
+
+.history-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: white; padding: 60px 20px 20px 20px; overflow-y: auto; display: none; }
+
+.history-item { margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; cursor: pointer; }
+
+.close-history { position: fixed; top: 10px; left: 10px; font-size: 1.5em; background: #dc3545; border-radius: 50%; width: 40px; height: 40px; } </style>
+
+</head>
+<body><div class="calculator">
+  <div id="display" class="display">0</div>  <div class="buttons">
+    <button onclick="clearDisplay()" class="clear">C</button>
+    <button onclick="append('/')" class="operator">/</button>
+    <button onclick="append('*')" class="operator">*</button>
+    <button onclick="append('-')" class="operator">-</button><button onclick="append('7')">7</button>
+<button onclick="append('8')">8</button>
+<button onclick="append('9')">9</button>
+<button onclick="append('+')" class="operator">+</button>
+
+<button onclick="append('4')">4</button>
+<button onclick="append('5')">5</button>
+<button onclick="append('6')">6</button>
+<button onclick="backspace()" class="backspace">⌫</button>
+
+
+<button onclick="append('1')">1</button>
+<button onclick="append('2')">2</button>
+<button onclick="append('3')">3</button>
+<button onclick="calculate()" class="equal">=</button>
+
+<button onclick="append('0')">0</button>
+<button onclick="append('.')">.</button>
+<button onclick="showHistory()" class="history"><small>history</small></button>
+
+  </div>
+</div><div id="historyPanel" class="history-panel">
+  <button class="close-history" onclick="hideHistory()">✕</button>
+  <div id="historyList"></div>
+</div><script>
+let expression = "";
+let touchStartY = 0;
+let touchEndY = 0;
+
+function append(value) {
+  expression += value;
+  updateDisplay();
+}
+
+function backspace() {
+  expression = expression.slice(0, -1);
+  updateDisplay();
+}
+
+function clearDisplay() {
+  expression = "";
+  updateDisplay();
+}
+
+function updateDisplay() {
+  let result = "";
+  try {
+    if (expression) {
+      result = eval(expression);
+    }
+  } catch {}
+
+  const displayText = expression
+    ? `${expression} = ${result !== "" ? result : "?"}`
+    : "0";
+
+  document.getElementById("display").innerText = displayText;
+}
+
+function calculate() {
+  try {
+    let result = eval(expression);
+    saveToHistory(expression, result);
+    updateDisplay();
+  } catch {
+    updateDisplay("Chyba");
+  }
+}
+
+function saveToHistory(expr, result) {
+  const now = new Date();
+  const date = now.toLocaleDateString('cs-CZ');
+  const time = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+
+  const entry = {
+    text: `${date}, ${time} • ${expr} = ${result}`,
+    expr: expr
+  };
+
+  let history = JSON.parse(localStorage.getItem("calc_history") || "[]");
+  history.unshift(entry);
+
+  localStorage.setItem("calc_history", JSON.stringify(history));
+}
+
+function showHistory() {
+  const panel = document.getElementById("historyPanel");
+  const list = document.getElementById("historyList");
+
+  let history = JSON.parse(localStorage.getItem("calc_history") || "[]");
+
+  list.innerHTML = "";
+
+  history.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.innerText = item.text;
+
+    div.onclick = () => {
+      expression = item.expr;
+      updateDisplay();
+      hideHistory();
+    };
+
+    list.appendChild(div);
+  });
+
+  panel.style.display = "block";
+}
+
+function hideHistory() {
+  document.getElementById("historyPanel").style.display = "none";
+}
+
+// Swipe up to close history
+const panel = document.getElementById("historyPanel");
+
+panel.addEventListener("touchstart", e => {
+  touchStartY = e.changedTouches[0].screenY;
+});
+
+panel.addEventListener("touchend", e => {
+  touchEndY = e.changedTouches[0].screenY;
+
+  if (touchStartY - touchEndY > 50) {
+    hideHistory();
+  }
+});
+</script></body>
+</html>
