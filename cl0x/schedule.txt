@@ -74,7 +74,7 @@
 
 13:15;min.mp3|0
 13:30;min.mp3|0, min.mp3|2000
-13:45;min.mp3|0, min.mp3|2000, min.mp3|4000
+13:53;min.mp3|0, min.mp3|2000, min.mp3|4000
 14:00;min.mp3|0, min.mp3|2000, min.mp3|4000, min.mp3|6000, hour.mp3|8000, hour.mp3|10000
 
 14:15;min.mp3|0
