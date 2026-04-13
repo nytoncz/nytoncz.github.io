@@ -3,24 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>hms</title>
+<title>hms clock</title>
 
 <style>
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  padding: 0;
   background: #111;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  width: 100vw;
   overflow: hidden;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
 }
 
+/* START SCREEN */
+#startScreen {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 3vmin;
+  z-index: 999;
+  cursor: pointer;
+}
+
+/* CLOCK */
 .app {
   width: 100vmin;
   height: 100vmin;
@@ -33,29 +46,29 @@ body {
   width: 90%;
   height: 90%;
   border-radius: 50%;
-  position: relative;
   background: white;
+  position: relative;
 }
 
 .clock::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
   width: 2vmin;
   height: 2vmin;
   background: black;
   border-radius: 50%;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
 }
 
+/* DOTS */
 .number {
   position: absolute;
   width: 100%;
   height: 100%;
   text-align: center;
   transform: rotate(var(--rotation));
-  color: black;
 }
 
 .number span {
@@ -68,36 +81,25 @@ body {
   font-size: 8vmin;
 }
 
+/* HANDS */
 .hand {
   position: absolute;
   top: 50%;
   left: 50%;
   transform-origin: left center;
-  transform: rotate(90deg);
   background: black;
 }
 
-.hour {
-  width: 30%;
-  height: 1vmin;
-  margin-top: -0.5vmin;
-}
+.hour { width: 30%; height: 1vmin; margin-top: -0.5vmin; }
+.minute { width: 50%; height: 0.5vmin; margin-top: -0.35vmin; }
+.second { width: 50%; height: 0.3vmin; margin-top: -0.2vmin; }
 
-.minute {
-  width: 50%;
-  height: 0.5vmin;
-  margin-top: -0.35vmin;
-}
-
-.second {
-  width: 50%;
-  height: 0.3vmin;
-  margin-top: -0.2vmin;
-}
 </style>
 </head>
 
 <body>
+
+<div id="startScreen">Klikni pro spuštění</div>
 
 <div class="app">
   <div class="clock" id="clock">
@@ -109,21 +111,26 @@ body {
 
 <script>
 
-// ================= CLOCK =================
+//////////////////////////////
+// CLOCK UI
+//////////////////////////////
+
 const clock = document.getElementById("clock");
 
+// ciferník
 for (let i = 1; i <= 12; i++) {
-  const number = document.createElement("div");
-  number.className = "number";
+  const n = document.createElement("div");
+  n.className = "number";
 
-  if (i % 3 === 0) number.classList.add("major");
+  if (i % 3 === 0) n.classList.add("major");
 
-  number.style.setProperty("--rotation", i * 30 + "deg");
+  n.style.setProperty("--rotation", i * 30 + "deg");
 
   const span = document.createElement("span");
   span.innerText = "•";
-  number.appendChild(span);
-  clock.appendChild(number);
+  n.appendChild(span);
+
+  clock.appendChild(n);
 }
 
 function updateClock() {
@@ -133,123 +140,139 @@ function updateClock() {
   const m = now.getMinutes();
   const h = now.getHours();
 
-  document.querySelector('.second').style.transform =
+  document.querySelector(".second").style.transform =
     `rotate(${s * 6 - 90}deg)`;
 
-  document.querySelector('.minute').style.transform =
+  document.querySelector(".minute").style.transform =
     `rotate(${m * 6 + s * 0.1 - 90}deg)`;
 
-  document.querySelector('.hour').style.transform =
+  document.querySelector(".hour").style.transform =
     `rotate(${h * 30 + m * 0.5 - 90}deg)`;
 }
 
 setInterval(updateClock, 1000);
 updateClock();
 
-// ================= AUDIO (WEB AUDIO API) =================
+//////////////////////////////
+// AUDIO ENGINE (DAW STYLE)
+//////////////////////////////
+
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const buffers = {};
+let unlocked = false;
 
-// unlock audio
-document.addEventListener("click", async () => {
-  await audioCtx.resume();
-}, { once: true });
-
-// load sound buffer
-async function loadSound(file) {
-  const res = await fetch(file);
-  const arr = await res.arrayBuffer();
-  const buf = await audioCtx.decodeAudioData(arr);
-  buffers[file] = buf;
+async function warmup() {
+  const b = audioCtx.createBuffer(1,1,22050);
+  const s = audioCtx.createBufferSource();
+  s.buffer = b;
+  s.connect(audioCtx.destination);
+  s.start();
 }
 
-function preloadSounds(files) {
+async function unlockAudio() {
+  if (unlocked) return;
+
+  await audioCtx.resume();
+  await warmup();
+
+  unlocked = true;
+  document.getElementById("startScreen").style.display = "none";
+
+  startScheduler();
+}
+
+document.addEventListener("pointerdown", unlockAudio);
+document.addEventListener("keydown", unlockAudio);
+
+async function loadSound(file) {
+  const r = await fetch(file);
+  const a = await r.arrayBuffer();
+  buffers[file] = await audioCtx.decodeAudioData(a);
+}
+
+function preload(files) {
   files.forEach(loadSound);
 }
 
-function playSound(file, time = 0) {
-  const buffer = buffers[file];
-  if (!buffer) return;
+function play(file, offset = 0) {
+  const buf = buffers[file];
+  if (!buf) return;
 
-  const source = audioCtx.createBufferSource();
-  source.buffer = buffer;
-  source.connect(audioCtx.destination);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(audioCtx.destination);
 
-  source.start(audioCtx.currentTime + time);
+  src.start(audioCtx.currentTime + offset);
 }
 
-// ================= SCHEDULE =================
+//////////////////////////////
+// SCHEDULE
+//////////////////////////////
+
 let schedule = [];
 
-function timeToMin(t) {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
+function toMin(t){
+  const [h,m] = t.split(":").map(Number);
+  return h*60+m;
 }
 
-fetch('schedule.txt')
-  .then(r => r.text())
-  .then(text => {
+fetch("schedule.txt")
+  .then(r=>r.text())
+  .then(t=>{
 
-    const lines = text.split('\n').filter(Boolean);
+    const lines = t.split("\n").filter(Boolean);
 
-    schedule = lines.map(line => {
-      const [time, soundsPart] = line.split(';');
-
-      const sounds = soundsPart.split(',').map(s => {
-        const [file, delay] = s.split('|');
-        return {
-          file: file.trim(),
-          delay: Number(delay)
-        };
-      });
+    schedule = lines.map(l=>{
+      const [time, sounds] = l.split(";");
 
       return {
-        time: time.trim(),
-        t: timeToMin(time.trim()),
-        sounds
+        t: toMin(time),
+        sounds: sounds.split(",").map(s=>{
+          const [f,d] = s.split("|");
+          return { file:f.trim(), delay:+d };
+        })
       };
     });
 
-    // preload
-    const all = [];
-    schedule.forEach(e => {
-      e.sounds.forEach(s => {
-        if (!all.includes(s.file)) all.push(s.file);
+    const all=[];
+    schedule.forEach(e=>{
+      e.sounds.forEach(s=>{
+        if(!all.includes(s.file)) all.push(s.file);
       });
     });
 
-    preloadSounds(all);
+    preload(all);
   });
 
-// ================= STABLE SCHEDULER =================
-let firedMinute = null;
+//////////////////////////////
+// DAW SCHEDULER
+//////////////////////////////
 
-function getMinuteKey(date) {
-  return date.getHours() + ":" + date.getMinutes();
+let fired = -1;
+
+function startScheduler(){
+
+  setInterval(()=>{
+
+    const now = new Date();
+
+    if(now.getSeconds() !== 0) return;
+
+    const min = now.getHours()*60 + now.getMinutes();
+
+    if(min === fired) return;
+    fired = min;
+
+    schedule.forEach(e=>{
+      if(e.t === min){
+        e.sounds.forEach(s=>{
+          play(s.file, s.delay/1000);
+        });
+      }
+    });
+
+  }, 1000);
 }
-
-setInterval(() => {
-  const now = new Date();
-
-  if (now.getSeconds() !== 0) return;
-
-  const key = getMinuteKey(now);
-
-  if (key === firedMinute) return;
-
-  firedMinute = key;
-
-  const currentMin = now.getHours() * 60 + now.getMinutes();
-
-  schedule.forEach(event => {
-    if (event.t === currentMin) {
-      event.sounds.forEach(s => {
-        playSound(s.file, s.delay / 1000);
-      });
-    }
-  });
-
-}, 1000);
 
 </script>
 
