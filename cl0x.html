@@ -1,1 +1,256 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>hms</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
 
+.app {
+  width: 100vmin;
+  height: 100vmin;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  position: relative;
+}
+
+.clock {
+  width: 90%; 
+  height: 90%;
+  border-radius: 50%;
+  position: relative;
+  background: white;
+  overflow: hidden;
+}
+
+.clock::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3vmin; 
+  height: 3vmin;
+  background-color: black;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10; 
+}
+
+/* TEČKY */
+.number {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transform: rotate(var(--rotation));
+  color: black;
+}
+
+.number span {
+  display: inline-block;
+  transform: rotate(calc(-1 * var(--rotation)));
+  font-size: 4vmin;
+}
+
+.number.major span {
+  font-size: 8vmin;
+}
+
+/* RUČIČKY */
+.hand {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: left center;
+  transform: rotate(90deg);
+  background: black;
+  border-radius: 10px;
+}
+
+.hour {
+  width: 30%;
+  height: 0.6vmin;
+  margin-top: -0.5vmin;
+  position: absolute;
+  border-radius:50%;
+}
+
+/* kolečko uprostřed hodinové ručičky */
+.hour::after {
+  content: '';
+  position: absolute;
+  left: 120%;
+  top: 50%;
+  width: 1.2vmin;
+  height: 1.2vmin;
+  background: black;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.minute {
+  width: 50%;
+  height: 0.4vmin;
+  margin-top: -0.35vmin;
+}
+
+.second {
+  width: 60%;
+  height: 0.4vmin;
+  margin-top: -0.2vmin;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+  
+  .minute-mark {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(var(--rotation));
+  text-align: center;
+}
+
+.minute-mark::after {
+  content: '';
+  display: inline-block;
+  width: 0.6vmin;
+  height: 0.6vmin;
+  background: black;
+  border-radius: 50%;
+}
+
+/* zvýraznění po 5 minutách */
+.minute-mark.big::after {
+  width: 1vmin;
+  height: 1vmin;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <div class="clock" id="clock">
+
+    <!-- kolečka -->
+    <div class="gear sec" id="gearSec"></div>
+    <div class="gear2 sec2" id="gearSec"></div>
+    <div class="gear free"></div>
+     <div class="gear2 free2"></div>
+
+    <div class="hand hour"></div>
+    <div class="hand minute"></div>
+    <div class="hand second"></div>
+  </div>
+</div>
+
+<script>
+const clock = document.getElementById("clock");
+
+for (let i = 1; i <= 12; i++) {
+  const number = document.createElement("div");
+  number.className = "number";
+  
+  if (i % 3 === 0) {
+    number.classList.add("major");
+  }
+
+  number.style.setProperty("--rotation", i * 30 + "deg");
+  const span = document.createElement("span");
+  span.innerText = "•";
+  number.appendChild(span);
+  clock.appendChild(number);
+}
+
+function updateClock() {
+  const now = new Date();
+  const seconds = now.getSeconds();
+  const minutes = now.getMinutes();
+  const hours = now.getHours();
+
+  const secondDeg = (seconds * 6) - 90;
+  const minuteDeg = (minutes * 6) + (seconds * 0.1) - 90;
+  const hourDeg = (hours * 30) + (minutes * 0.5) - 90;
+
+  document.querySelector('.second').style.transform = `rotate(${secondDeg}deg)`;
+  document.querySelector('.minute').style.transform = `rotate(${minuteDeg}deg)`;
+  document.querySelector('.hour').style.transform = `rotate(${hourDeg}deg)`;
+
+  // napojené ozubené kolečko (otáčí se podle sekund)
+  document.getElementById('gearSec').style.transform = `rotate(${seconds * 6}deg)`;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+// ====== PLÁN A ODBÍJENÍ ======
+let events = [];
+
+fetch('schedule.txt')
+  .then(res => res.text())
+  .then(text => {
+    const lines = text.split('\n');
+    events = lines
+      .filter(line => line.trim() !== "")
+      .map(line => {
+        const [time, count, sound] = line.split(';');
+        return {
+          time: time.trim(),
+          count: parseInt(count),
+          sound: sound.trim()
+        };
+      });
+  })
+  .catch(err => console.log("errortxt"));
+
+function playChime(count, soundFile) {
+  let i = 0;
+  const interval = setInterval(() => {
+    const audio = new Audio(soundFile);
+    audio.play().catch(e => console.error("Chyba při přehrávání zvuku:", e));
+    i++;
+    if (i >= count) clearInterval(interval);
+  }, 1500);
+}
+
+let lastTriggered = "";
+setInterval(() => {
+  const now = new Date();
+  const currentTime =
+    String(now.getHours()).padStart(2, '0') + ":" +
+    String(now.getMinutes()).padStart(2, '0');
+
+  if (currentTime !== lastTriggered && now.getSeconds() === 0) {
+    events.forEach(event => {
+      if (event.time === currentTime) {
+        playChime(event.count, event.sound);
+      }
+    });
+    lastTriggered = currentTime;
+  }
+}, 1000);
+</script>
+
+</body>
+</html>
