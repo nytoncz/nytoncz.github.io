@@ -4,7 +4,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
-<title>m3m0ry24</title>
+<title>memorygame24</title>
 
 <style>
 body {
@@ -86,9 +86,9 @@ td {
 <body>
 
 <div id="menu">
-  <h1>Pexeso</h1>
-  <input id="playerName" placeholder="Zadej jméno">
-  <button id="startBtn">Start</button>
+  <h1>memorygame24</h1>
+  nickname:<input id="playerName" placeholder="nickname">
+  <button id="startBtn">start</button>
 </div>
 
 <div id="game"></div>
@@ -108,12 +108,12 @@ const nameInput=document.getElementById("playerName");
 startBtn.addEventListener("click", startGame);
 
 function randLetter(){
-  const letters="AaBCDEeFGHIiJKLMNOoPQRSTUuVWXYyZ";
+  const letters="AaBbCcDdEeFfGgHhIiJKLMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
   return letters[Math.floor(Math.random()*letters.length)];
 }
 
 // 👇 předvyplnění 3 písmen
-let defaultName = randLetter() + randLetter() + randLetter();
+let defaultName = randLetter() + randLetter() + randLetter() + randLetter() + randLetter() + randLetter();
 nameInput.value = defaultName;
 
 // 👇 při prvním kliknutí se smaže
