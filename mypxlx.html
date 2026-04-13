@@ -1,1 +1,452 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<title>myPxls</title>
+<style>
+html, body { overscroll-behavior: none; }
+body { text-align: center; background: #222; }
+#controls1 { margin: 3px; }
+#controls2 { margin: 3px; }
+#grid { display: grid; margin: 3px auto; width: max-content; border: 1px solid grey; }
+#canvasName { width: 140px; }
+#canvasList { width: 160px; }
+.cell { border: 0px solid black; background: white; cursor: pointer; }
+button { margin: 0px; padding: 4px; font-size: 18px; border: 0px;}
+input, select { margin: 1px; padding:4px; font-size:12px }
+#colorHistory { margin-top: 3px; display: block; }
+.color-swatch { display: inline-block; width: 20px; height: 20px; margin: 1px; border: 1px solid #000; cursor: pointer; }
+#colorPicker{ width:30px; height:20px; border:0px; }
+ #sizeDisplay{color:#fff;}
+ #sideMenu {position: fixed;top: 0;left: -250px;width: 250px;height: 100%; background: #111; z-index: 999;transition: left 0.5s ease;box-shadow: 2px 0 10px rgba(0,0,0,0.5);}
+#sideMenu.open { left: 0;}
+.menuContent {padding: 15px; color: white; }
 
+.menuContent button {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  text-align: left;
+  font-weight: bold;
+  border: 0px;
+  border-radius: 17px;
+}
+ #menuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+  z-index: 998;
+
+  display: none;
+}
+
+#menuOverlay.open {
+  display: block;
+}
+  #menuPanel {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+</style>
+</head>
+<body>
+
+<div id="sideMenu">
+  <div id="menuMain" class="menuContent">
+    <h3>🖼️myPxls</h3>
+    <hr>
+    <button onclick="reloadApp()">🆕 new project</button>
+    <button onclick="showPNGInNewWindow()">⬇️ export to .png</button>
+    <hr>
+    <button onclick="openPanel('settings')"> ⚙️ setting</button>
+    <button onclick="clearCanvas()">🎨 my colors</button>
+    <hr>
+    <button onclick="openPanel('help')">🆘 help</button>
+  </div>
+<div id="menuPanel" class="menuContent" style="display:none;">
+    <button onclick="closePanel()">⬅️ Zpět</button>
+    <div id="panelContent"></div>
+  </div>
+</div>
+  
+  
+<div id="menuOverlay" onclick="toggleMenu()"></div>
+<div id="controls1">
+<input type="text" id="canvasName" placeholder="name" />
+<button onclick="saveCanvas()" style="font-size:10px">save</button>
+<select id="canvasList" onchange="loadCanvas()">
+<option value="">projects</option>
+</select>
+</div>
+<div id="controls2">
+<button onclick="setTool('brush')" id="btnBrush">🔳️</button>
+<button onclick="setTool('fill')" id="btnFill">🧨</button>
+<button onclick="setTool('draw')" id="btnDraw">🖌️</button>
+<button onclick="setTool('eraser')" id="btnEraser">🧹</button>
+<button onclick="changeSize(-1)">➖</button>
+<span id="sizeDisplay">1</span>
+<button onclick="changeSize(1)">➕</button>
+<button onclick="undo()">↩️</button>
+<button onclick="redo()">↪️</button>
+ <button onclick="toggleMenu()">☰</button>
+</div>
+
+<div id="grid"></div>
+ <table><tr><td>
+ <input type="color" id="colorPicker" value="#000000" />
+ </td>
+  <td>
+<div id="colorHistory"></div>
+  </td></tr>
+  </table>
+<script>
+const WIDTH = 120;
+const HEIGHT = 180;
+const CELL_SIZE = 3;
+let currentDrawing = [];
+let currentKey = "pixelCanvas";
+let saveTimeout = null;
+const maxHistory = 10;
+let colorHistory = [];
+let tool = "draw";
+let toolSize = 1;
+let historyStack = [];
+let redoStack = [];
+const MAX_HISTORY = 20;
+const COLOR_HISTORY_KEY = "colorHistory";
+let isDrawing = false;
+let lastDrawPos = null;
+let touchStarted = false;
+let startX = 0;
+let startY = 0;
+const grid = document.getElementById("grid");
+
+function setTool(selectedTool) {
+  tool = selectedTool;
+  updateToolButtons();
+}
+  
+function reloadApp() {
+  const confirmReload = confirm("do you want create new project?");
+
+  if (confirmReload) {
+    location.reload();
+  }
+}
+  
+function openPanel(type) {
+  document.getElementById("menuMain").style.display = "none";
+  document.getElementById("menuPanel").style.display = "block";
+  const content = document.getElementById("panelContent");
+  if (type === "help") {
+    content.innerHTML = `
+      <h3>HELP</h3>
+      <p>✏️ Draw = kreslení tahem</p>
+      <p>© Brush = klikání</p>
+      <p>🧹 Guma = mazání</p>
+      <p>• Fill = výplň</p>
+    `;
+  }
+if (type === "settings") {
+  content.innerHTML = `
+    <h3>settings</h3>
+    <label>
+      <input type="checkbox" id="gridToggle" onchange="toggleGrid(this.checked)">
+      Zobrazit mřížku
+    </label>
+  `;
+  const isGridOn = localStorage.getItem("gridEnabled") === "true";
+  document.getElementById("gridToggle").checked = isGridOn;
+  applyGrid(isGridOn);
+}
+}
+
+function closePanel() {
+  document.getElementById("menuMain").style.display = "block";
+  document.getElementById("menuPanel").style.display = "none";
+}
+
+function changeSize(delta) {
+  toolSize += delta;
+  if (toolSize < 1) toolSize = 1;
+  if (toolSize > 9) toolSize = 9;
+  document.getElementById("sizeDisplay").textContent = toolSize;
+}
+
+function updateToolButtons() {
+  const tools = ['brush','fill','draw','eraser'];
+
+  tools.forEach(t => {
+    const btn = document.getElementById("btn" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (!btn) return;
+
+    if (tool === t) {
+      btn.style.backgroundColor = "#999";
+      btn.style.color = "#fff";
+      btn.style.padding = "8px";   // 🔥 menší padding (aktivní)
+    } else {
+      btn.style.backgroundColor = "";
+      btn.style.color = "";
+      btn.style.padding = "5px";   // 🔄 normální padding (neaktivní)
+    }
+  });
+}
+
+function toggleGrid(enabled) {
+  localStorage.setItem("gridEnabled", enabled);
+  applyGrid(enabled);
+}
+
+function applyGrid(enabled) {
+  const cells = document.querySelectorAll(".cell");
+  cells.forEach(cell => {
+    cell.style.boxShadow = enabled 
+      ? "inset 0 0 0 1px rgba(0,0,0,0.08)" 
+      : "none";
+  });
+}
+ 
+ function toggleMenu() {
+  const menu = document.getElementById("sideMenu");
+  const overlay = document.getElementById("menuOverlay");
+  menu.classList.toggle("open");
+  overlay.classList.toggle("open");
+}
+
+function saveColorHistory() { localStorage.setItem(COLOR_HISTORY_KEY, JSON.stringify(colorHistory)); }
+function loadColorHistory() { 
+  const stored = localStorage.getItem(COLOR_HISTORY_KEY);
+  if(stored){ colorHistory = JSON.parse(stored); renderColorHistory(); }
+}
+function updateColorHistory(color){
+  if(!color) return;
+  colorHistory = colorHistory.filter(c=>c!==color);
+  colorHistory.unshift(color);
+  if(colorHistory.length>maxHistory) colorHistory.pop();
+  saveColorHistory();
+  renderColorHistory();
+}
+function renderColorHistory(){
+  const historyDiv = document.getElementById('colorHistory');
+  historyDiv.innerHTML='';
+  colorHistory.forEach(c=>{
+    const swatch = document.createElement('div');
+    swatch.className = 'color-swatch';
+    swatch.style.backgroundColor = c;
+    swatch.onclick = ()=>document.getElementById('colorPicker').value = c;
+    historyDiv.appendChild(swatch);
+  });
+}
+
+function floodFill(startIndex,targetColor,newColor){
+  if(targetColor===newColor) return;
+  const stack = [startIndex];
+  while(stack.length){
+    const i = stack.pop();
+    if(currentDrawing[i]!==targetColor) continue;
+    currentDrawing[i]=newColor;
+    const x=i%WIDTH;
+    const y=Math.floor(i/WIDTH);
+    if(x>0) stack.push(i-1);
+    if(x<WIDTH-1) stack.push(i+1);
+    if(y>0) stack.push(i-WIDTH);
+    if(y<HEIGHT-1) stack.push(i+WIDTH);
+  }
+}
+function drawPixel(x, y) {
+  const selectedColor = document.getElementById("colorPicker").value;
+  for (let dy = -toolSize + 1; dy < toolSize; dy++) {
+    for (let dx = -toolSize + 1; dx < toolSize; dx++) {
+      const px = x + dx;
+      const py = y + dy;
+      if (px < 0 || py < 0 || px >= WIDTH || py >= HEIGHT) continue;
+      const i = py * WIDTH + px;
+      const cell = grid.children[i];
+      if (tool === "eraser") {
+        currentDrawing[i] = "#ffffff";
+        cell.style.backgroundColor = "#ffffff";
+        continue;
+      }
+      if (tool === "brush") {
+        if (currentDrawing[i] === "#ffffff") {
+          currentDrawing[i] = selectedColor;
+          cell.style.backgroundColor = selectedColor;
+          updateColorHistory(selectedColor);
+        } 
+        else if (currentDrawing[i] === selectedColor) {
+          currentDrawing[i] = "#ffffff";
+          cell.style.backgroundColor = "#ffffff";
+        } 
+        else {
+          currentDrawing[i] = selectedColor;
+          cell.style.backgroundColor = selectedColor;
+          updateColorHistory(selectedColor);
+        }
+        continue;
+      }
+      if (tool === "draw") {
+        if (currentDrawing[i] !== selectedColor) {
+          currentDrawing[i] = selectedColor;
+          cell.style.backgroundColor = selectedColor;
+          updateColorHistory(selectedColor);
+        }
+      }
+    }
+  }
+}
+
+function drawLine(x0,y0,x1,y1){
+  const dx=Math.abs(x1-x0), dy=Math.abs(y1-y0);
+  const sx=x0<x1?1:-1, sy=y0<y1?1:-1;
+  let err=dx-dy;
+  while(true){
+    drawPixel(x0,y0);
+    if(x0===x1 && y0===y1) break;
+    let e2=2*err;
+    if(e2>-dy){ err-=dy; x0+=sx; }
+    if(e2<dx){ err+=dx; y0+=sy; }
+  }
+}
+
+function paintAt(x,y){
+  const rect=grid.getBoundingClientRect();
+  const size=grid.children[0].getBoundingClientRect().width;
+  const cx=Math.floor((x-rect.left)/size);
+  const cy=Math.floor((y-rect.top)/size);
+  if(cx<0||cy<0||cx>=WIDTH||cy>=HEIGHT) return;
+  if(lastDrawPos) drawLine(lastDrawPos.x,lastDrawPos.y,cx,cy);
+  else drawPixel(cx,cy);
+  lastDrawPos={x:cx,y:cy};
+  scheduleSave();
+}
+
+grid.addEventListener("touchstart",(e)=>{
+  if(tool!=="draw" && tool!=="eraser") return;
+  if(e.touches.length>1){ touchStarted=false; return; }
+  const t=e.touches[0]; touchStarted=true; isDrawing=false; startX=t.clientX; startY=t.clientY;
+  historyStack.push([...currentDrawing]); redoStack=[];
+},{passive:true});
+
+grid.addEventListener("touchmove",(e)=>{
+  if(tool!=="draw" && tool!=="eraser") return;
+  if(!touchStarted) return;
+  if(e.touches.length>1){ touchStarted=false; isDrawing=false; return; }
+  const t=e.touches[0]; const dx=Math.abs(t.clientX-startX), dy=Math.abs(t.clientY-startY);
+  if(!isDrawing){ if(dx<5 && dy<5) return; isDrawing=true; }
+  paintAt(t.clientX,t.clientY);
+},{passive:true});
+
+document.addEventListener("touchend",()=>{
+  touchStarted=false; isDrawing=false; lastDrawPos=null;
+});
+
+function undo(){ if(!historyStack.length) return; redoStack.push([...currentDrawing]); currentDrawing=historyStack.pop(); redraw(); scheduleSave(); }
+function redo(){ if(!redoStack.length) return; historyStack.push([...currentDrawing]); currentDrawing=redoStack.pop(); redraw(); scheduleSave(); }
+function redraw(){ currentDrawing.forEach((c,i)=>grid.children[i].style.backgroundColor=c); }
+
+function initGrid(data=null){
+  grid.innerHTML="";
+  grid.style.gridTemplateColumns=`repeat(${WIDTH},${CELL_SIZE}px)`;
+  currentDrawing=[];
+  for(let y=0;y<HEIGHT;y++){
+    for(let x=0;x<WIDTH;x++){
+      const i=y*WIDTH+x;
+      const cell=document.createElement("div");
+      cell.className="cell"; cell.style.width=CELL_SIZE+"px"; cell.style.height=CELL_SIZE+"px";
+      const color=data?data[i]:"#ffffff"; cell.style.backgroundColor=color;
+      currentDrawing.push(color);
+
+cell.onclick = () => {
+  historyStack.push([...currentDrawing]);
+  redoStack = [];
+  
+
+  const cx = i % WIDTH;
+  const cy = Math.floor(i / WIDTH);
+
+  if (tool === "brush" || tool === "eraser" || tool === "draw") {
+    drawPixel(cx, cy);
+  } 
+  else if (tool === "fill") {
+    const selectedColor = document.getElementById("colorPicker").value;
+    floodFill(i, currentDrawing[i], selectedColor);
+    redraw();
+    updateColorHistory(selectedColor);
+  }
+
+  scheduleSave();
+};
+
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function showPNGInNewWindow(){
+  const scale=Math.floor(1920/HEIGHT);
+  const canvas=document.createElement("canvas");
+  canvas.width=WIDTH*scale; canvas.height=HEIGHT*scale;
+  const ctx=canvas.getContext("2d");
+  ctx.imageSmoothingEnabled=false;
+  for(let y=0;y<HEIGHT;y++)
+    for(let x=0;x<WIDTH;x++){
+      const i=y*WIDTH+x;
+      ctx.fillStyle=currentDrawing[i]||"#ffffff";
+      ctx.fillRect(x*scale,y*scale,scale,scale);
+    }
+  const imgWindow=window.open();
+  imgWindow.document.write('<img src="'+canvas.toDataURL()+'" style="width:100%;image-rendering:pixelated;">');
+}
+
+function saveCanvas(){
+  const name=document.getElementById("canvasName").value.trim();
+  if(!name) return;
+  localStorage.setItem("canvas_"+name,JSON.stringify(currentDrawing));
+  updateList();
+}
+
+function loadCanvas(){
+  const key=document.getElementById("canvasList").value;
+  if(!key) return;
+  currentKey=key;
+  initGrid(JSON.parse(localStorage.getItem(key)));
+}
+
+function updateList(){
+  const select=document.getElementById("canvasList");
+  select.innerHTML='<option value="">projects</option>';
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key.startsWith("canvas_")){
+      const o=document.createElement("option");
+      o.value=key; o.textContent=key.replace("canvas_","");
+      select.appendChild(o);
+    }
+  }
+}
+
+function saveNow(){
+    if(currentKey) 
+    localStorage.setItem(currentKey,JSON.stringify(currentDrawing)); }
+function scheduleSave(){ 
+    clearTimeout(saveTimeout); 
+    saveTimeout=setTimeout(saveNow,500); }
+
+function load(){
+  updateList();
+  loadColorHistory();
+  initGrid();
+  const isGridOn = localStorage.getItem("gridEnabled") === "true";
+  applyGrid(isGridOn);
+  updateToolButtons();
+}
+
+load();
+</script>
+</body>
+</html>
