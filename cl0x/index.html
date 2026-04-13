@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>hms</title>
+
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   padding: 0;
@@ -27,17 +27,14 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: transparent;
-  position: relative;
 }
 
 .clock {
-  width: 90%; 
+  width: 90%;
   height: 90%;
   border-radius: 50%;
   position: relative;
   background: white;
-  overflow: hidden;
 }
 
 .clock::after {
@@ -45,12 +42,11 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 2.0vmin; 
-  height: 2.0vmin;
-  background-color: black;
+  width: 2vmin;
+  height: 2vmin;
+  background: black;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  z-index: 10; 
 }
 
 .number {
@@ -83,39 +79,21 @@ body {
 
 .hour {
   width: 30%;
-  height: 1.0vmin;
+  height: 1vmin;
   margin-top: -0.5vmin;
-  position: absolute;
-  border-radius:50%;
-}
-
-.hour::after {
-  content: '';
-  position: absolute;
-  left: 130%;
-  top: 50%;
-  width: 0.8vmin;
-  height: 0.8vmin;
-  background: black;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
 }
 
 .minute {
   width: 50%;
   height: 0.5vmin;
   margin-top: -0.35vmin;
-  border-radius: 50%;
 }
-
 
 .second {
   width: 50%;
   height: 0.3vmin;
   margin-top: -0.2vmin;
-  border-radius:50%;
 }
-  
 </style>
 </head>
 
@@ -130,15 +108,18 @@ body {
 </div>
 
 <script>
+
+// ================= CLOCK =================
 const clock = document.getElementById("clock");
 
 for (let i = 1; i <= 12; i++) {
   const number = document.createElement("div");
   number.className = "number";
-  
+
   if (i % 3 === 0) number.classList.add("major");
 
   number.style.setProperty("--rotation", i * 30 + "deg");
+
   const span = document.createElement("span");
   span.innerText = "•";
   number.appendChild(span);
@@ -147,83 +128,127 @@ for (let i = 1; i <= 12; i++) {
 
 function updateClock() {
   const now = new Date();
-  const seconds = now.getSeconds();
-  const minutes = now.getMinutes();
-  const hours = now.getHours();
 
-  const secondDeg = (seconds * 6) - 90;
-  const minuteDeg = (minutes * 6) + (seconds * 0.1) - 90;
-  const hourDeg = (hours * 30) + (minutes * 0.5) - 90;
+  const s = now.getSeconds();
+  const m = now.getMinutes();
+  const h = now.getHours();
 
-  document.querySelector('.second').style.transform = `rotate(${secondDeg}deg)`;
-  document.querySelector('.minute').style.transform = `rotate(${minuteDeg}deg)`;
-  document.querySelector('.hour').style.transform = `rotate(${hourDeg}deg)`;
+  document.querySelector('.second').style.transform =
+    `rotate(${s * 6 - 90}deg)`;
+
+  document.querySelector('.minute').style.transform =
+    `rotate(${m * 6 + s * 0.1 - 90}deg)`;
+
+  document.querySelector('.hour').style.transform =
+    `rotate(${h * 30 + m * 0.5 - 90}deg)`;
 }
 
 setInterval(updateClock, 1000);
 updateClock();
 
+// ================= AUDIO (WEB AUDIO API) =================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const buffers = {};
 
-// ====== PLÁN A ODBÍJENÍ ======
-let events = [];
+// unlock audio
+document.addEventListener("click", async () => {
+  await audioCtx.resume();
+}, { once: true });
 
-fetch('schedule.txt')
-  .then(res => res.text())
-  .then(text => {
-    const lines = text.split('\n');
-
-    events = lines
-      .filter(line => line.trim() !== "")
-      .map(line => {
-        const [time, soundsPart] = line.split(';');
-
-        const sounds = soundsPart.split(',').map(item => {
-          const [file, delay] = item.split('|');
-
-          return {
-            file: file.trim(),
-            delay: parseInt(delay)
-          };
-        });
-
-        return {
-          time: time.trim(),
-          sounds: sounds
-        };
-      });
-  })
-  .catch(err => console.log("errortxt"));
-
-
-// 🔊 NOVÁ FUNKCE
-function playChime(sounds) {
-  sounds.forEach(sound => {
-    setTimeout(() => {
-      const audio = new Audio(sound.file);
-      audio.play().catch(e => console.error("Chyba zvuku:", e));
-    }, sound.delay);
-  });
+// load sound buffer
+async function loadSound(file) {
+  const res = await fetch(file);
+  const arr = await res.arrayBuffer();
+  const buf = await audioCtx.decodeAudioData(arr);
+  buffers[file] = buf;
 }
 
+function preloadSounds(files) {
+  files.forEach(loadSound);
+}
 
-// ⏱️ KONTROLA ČASU
-let lastTriggered = "";
+function playSound(file, time = 0) {
+  const buffer = buffers[file];
+  if (!buffer) return;
+
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+
+  source.start(audioCtx.currentTime + time);
+}
+
+// ================= SCHEDULE =================
+let schedule = [];
+
+function timeToMin(t) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+fetch('schedule.txt')
+  .then(r => r.text())
+  .then(text => {
+
+    const lines = text.split('\n').filter(Boolean);
+
+    schedule = lines.map(line => {
+      const [time, soundsPart] = line.split(';');
+
+      const sounds = soundsPart.split(',').map(s => {
+        const [file, delay] = s.split('|');
+        return {
+          file: file.trim(),
+          delay: Number(delay)
+        };
+      });
+
+      return {
+        time: time.trim(),
+        t: timeToMin(time.trim()),
+        sounds
+      };
+    });
+
+    // preload
+    const all = [];
+    schedule.forEach(e => {
+      e.sounds.forEach(s => {
+        if (!all.includes(s.file)) all.push(s.file);
+      });
+    });
+
+    preloadSounds(all);
+  });
+
+// ================= STABLE SCHEDULER =================
+let firedMinute = null;
+
+function getMinuteKey(date) {
+  return date.getHours() + ":" + date.getMinutes();
+}
 
 setInterval(() => {
   const now = new Date();
 
-  const currentTime =
-    String(now.getHours()).padStart(2, '0') + ":" +
-    String(now.getMinutes()).padStart(2, '0');
+  if (now.getSeconds() !== 0) return;
 
-  if (currentTime !== lastTriggered && now.getSeconds() === 0) {
-    events.forEach(event => {
-      if (event.time === currentTime) {
-        playChime(event.sounds);
-      }
-    });
-    lastTriggered = currentTime;
-  }
+  const key = getMinuteKey(now);
+
+  if (key === firedMinute) return;
+
+  firedMinute = key;
+
+  const currentMin = now.getHours() * 60 + now.getMinutes();
+
+  schedule.forEach(event => {
+    if (event.t === currentMin) {
+      event.sounds.forEach(s => {
+        playSound(s.file, s.delay / 1000);
+      });
+    }
+  });
+
 }, 1000);
 
 </script>
