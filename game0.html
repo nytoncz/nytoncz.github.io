@@ -1,1 +1,325 @@
 
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>m3m0ry24</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #111;
+  color: #777;
+  text-align: center;
+}
+
+#menu { margin-top: 50px; }
+
+input, button {
+  padding: 10px;
+  margin: 5px;
+}
+
+#game {
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  grid-template-rows: repeat(6, 80px);
+  gap: 2px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.card {
+  width: 80px;
+  height: 80px;
+  background: #444;
+  color:#000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 40px;
+  border-radius: 4px;
+  opacity: 1;
+  transition: opacity 2s;
+}
+
+.card.flipped {
+  background: #777;
+  color: #000;
+  font-weight: bold;
+}
+
+.card.matched {
+  background: #272727;
+  font-size: 17px;
+}
+
+#timer {
+  margin-top: 20px;
+  font-size: 20px;
+}
+
+table {
+  margin: 20px auto;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 5px 10px;
+}
+
+.highlight {
+  background: #777;
+  color:#000;
+  font-weight: bold;
+}
+
+#best {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #2ecc71;
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <h1>Pexeso</h1>
+  <input id="playerName" placeholder="Zadej jméno">
+  <button id="startBtn">Start</button>
+</div>
+
+<div id="game"></div>
+  <div id="timer"></div>
+<div id="results"></div>
+
+<script>
+let firstCard=null, secondCard=null, lock=false, matchedPairs=0;
+let startTime=0, timerInterval;
+
+const game=document.getElementById("game");
+const timerDiv=document.getElementById("timer");
+const resultsDiv=document.getElementById("results");
+const startBtn=document.getElementById("startBtn");
+const nameInput=document.getElementById("playerName");
+
+startBtn.addEventListener("click", startGame);
+
+function randLetter(){
+  const letters="AaBCDEeFGHIiJKLMNOoPQRSTUuVWXYyZ";
+  return letters[Math.floor(Math.random()*letters.length)];
+}
+
+// 👇 předvyplnění 3 písmen
+let defaultName = randLetter() + randLetter() + randLetter();
+nameInput.value = defaultName;
+
+// 👇 při prvním kliknutí se smaže
+let nameCleared = false;
+nameInput.addEventListener("focus", ()=>{
+  if(!nameCleared){
+    nameInput.value="";
+    nameCleared = true;
+  }
+});
+
+function startGame(){
+  const name=document.getElementById("playerName").value.trim();
+  if(!name){ alert("name!"); return; }
+
+  document.getElementById("menu").style.display="none";
+  resultsDiv.innerHTML="";
+
+  game.style.display="grid";
+  timerDiv.style.display="block";
+
+  createBoard();
+  previewCards();
+}
+
+function updateTimer(){
+  const time=((Date.now()-startTime)/1000).toFixed(1);
+  timerDiv.textContent=":"+time+" s";
+}
+
+function getRandomNumber(){
+  return Math.floor(Math.random()*901)+99;
+}
+
+function createBoard(){
+  game.innerHTML="";
+  matchedPairs=0;
+
+  let values=[];
+  for(let i=0;i<12;i++){
+    const num=getRandomNumber();
+    values.push(num,num);
+  }
+
+  values.sort(()=>Math.random()-0.5);
+
+  values.forEach(value=>{
+    const card=document.createElement("div");
+    card.classList.add("card");
+    card.dataset.value=value;
+
+    card.addEventListener("click",()=>handleClick(card));
+    game.appendChild(card);
+  });
+}
+
+function previewCards(){
+  const cards = document.querySelectorAll(".card");
+
+  cards.forEach(card=>{
+    card.textContent = card.dataset.value;
+    card.classList.add("flipped");
+  });
+
+  setTimeout(()=>{
+    cards.forEach(card=>{
+      card.style.opacity = "0";
+    });
+  }, 1000);
+
+  setTimeout(()=>{
+    cards.forEach(card=>{
+      card.textContent="";
+      card.classList.remove("flipped");
+      card.style.opacity = "1";
+    });
+
+    startTime=Date.now();
+    timerInterval=setInterval(updateTimer,100);
+
+  }, 2000);
+}
+
+function handleClick(card){
+  if(lock) return;
+  if(card.classList.contains("flipped")) return;
+
+  card.textContent=card.dataset.value;
+  card.classList.add("flipped");
+
+  if(!firstCard){
+    firstCard=card;
+  } else {
+    secondCard=card;
+    lock=true;
+
+    if(firstCard.dataset.value===secondCard.dataset.value){
+      firstCard.classList.add("matched");
+      secondCard.classList.add("matched");
+
+      matchedPairs++;
+      resetTurn();
+
+      if(matchedPairs===12) finishGame();
+
+    } else {
+      setTimeout(()=>{
+        firstCard.textContent="";
+        secondCard.textContent="";
+
+        firstCard.classList.remove("flipped");
+        secondCard.classList.remove("flipped");
+
+        resetTurn();
+      },400);
+    }
+  }
+}
+
+function resetTurn(){
+  firstCard=null;
+  secondCard=null;
+  lock=false;
+}
+
+function finishGame(){
+  clearInterval(timerInterval);
+
+  const totalTime=((Date.now()-startTime)/1000).toFixed(1);
+  const name=document.getElementById("playerName").value;
+  const now=new Date();
+
+  const result={
+    name:name,
+    time:parseFloat(totalTime),
+    datetime: now.toLocaleString()
+  };
+
+  let scores=JSON.parse(localStorage.getItem("pexesoScores24"))||[];
+  scores.push(result);
+  scores.sort((a,b)=>a.time-b.time);
+  localStorage.setItem("pexesoScores24",JSON.stringify(scores));
+
+  game.style.display="none";
+  timerDiv.style.display="none";
+
+  showResults(scores,result);
+}
+
+function showResults(scores,lastResult){
+  resultsDiv.innerHTML="";
+
+  if(scores.length > 0){
+    const best=document.createElement("div");
+    best.id="best";
+    best.textContent="🏆"+scores[0].time+" s ("+scores[0].name+")";
+    resultsDiv.appendChild(best);
+  }
+
+  const table=document.createElement("table");
+
+  const index=scores.indexOf(lastResult);
+  const start=Math.max(0,index-8);
+  const end=Math.min(scores.length,index+9);
+
+  for(let i=start;i<end;i++){
+    const score=scores[i];
+    const row=document.createElement("tr");
+
+    if(score===lastResult){
+      row.classList.add("highlight");
+    }
+
+    row.innerHTML=`
+      <td>${i+1}.</td>
+      <td>${score.datetime}</td>
+      <td>${score.name}</td>
+      <td>${score.time} s</td>
+    `;
+
+    table.appendChild(row);
+  }
+
+  resultsDiv.appendChild(table);
+
+  const btn=document.createElement("button");
+  btn.textContent="Hrát znovu";
+  btn.onclick=restartGame;
+  resultsDiv.appendChild(btn);
+}
+
+function restartGame(){
+  firstCard=null;
+  secondCard=null;
+  lock=false;
+  matchedPairs=0;
+
+  resultsDiv.innerHTML="";
+
+  game.style.display="grid";
+  timerDiv.style.display="block";
+
+  createBoard();
+  previewCards();
+}
+</script>
+
+</body>
+</html>
