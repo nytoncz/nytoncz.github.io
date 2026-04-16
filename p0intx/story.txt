@@ -41,7 +41,7 @@ Podpalubí bylo temné a zatuchlé. Voda ti sahala po kotníky. Nahmatal jsi bed
 
 [5]
 Postavil sis provizorní tábor na okraji pláže. Oheň tě uklidnil, ale v noci jsi slyšel zvuky z džungle.
-[br]Ráno jsi zjistil, že kompas (pokud ho máš) ukazuje stále stejným směrem. Ať už to znamená cokoliv, něco tě volá.
+[br]Ráno jsi zjistil, že kompas ukazuje stále stejným směrem. Ať už to znamená cokoliv, něco tě volá.
 > Následovat kompas / instinkt | 6a
 > Zůstat a zlepšit tábor | 6b
 
@@ -53,7 +53,7 @@ Ztratil ses. Džungle tě pohltila. Bez jasného směru jsi bloudil celé hodiny
 
 [6a]
 Sloup byl pokrytý symboly. Když ses ho dotkl, ucítil jsi slabé vibrace.
-[br]Kompas (pokud ho máš) se zklidnil. Ukazoval přímo dolů — ke skrytému vchodu pod kameny.
+[br]Kompas se zklidnil. Ukazoval přímo dolů — ke skrytému vchodu pod kameny.
 > Otevřít vstup | 7
 > Ustoupit a odejít | 8
 
