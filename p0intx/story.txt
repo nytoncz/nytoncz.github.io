@@ -1,7 +1,6 @@
 
 [start]
-[br]
-[br]
+[br][br][br]
 [h2][center]Ztroskotanec[/h2][/center]
 > pokračovat | 1
 
@@ -15,6 +14,24 @@ Máš dvě možnosti: vydat se k vraku, nebo do vnitrozemí.
 
 [2]
 Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+[br]Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
 [br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
 > Prozkoumat podpalubí | 4
 > Vrátit se na břeh | 5
@@ -34,7 +51,7 @@ Podpalubí bylo temné a zatuchlé. Voda ti sahala po kotníky. Nahmatal jsi bed
 
 [5]
 Postavil sis provizorní tábor na okraji pláže. Oheň tě uklidnil, ale v noci jsi slyšel zvuky z džungle.
-[br]Ráno jsi zjistil, že kompas ukazuje stále stejným směrem. Ať už to znamená cokoliv, něco tě volá.
+[br]Ráno jsi zjistil, že kompas  ukazuje stále stejným směrem. Ať už to znamená cokoliv, něco tě volá.
 > Následovat kompas / instinkt | 6a
 > Zůstat a zlepšit tábor | 6b
 
@@ -46,7 +63,7 @@ Ztratil ses. Džungle tě pohltila. Bez jasného směru jsi bloudil celé hodiny
 
 [6a]
 Sloup byl pokrytý symboly. Když ses ho dotkl, ucítil jsi slabé vibrace.
-[br]Kompas se zklidnil. Ukazoval přímo dolů — ke skrytému vchodu pod kameny.
+[br]Kompas  se zklidnil. Ukazoval přímo dolů — ke skrytému vchodu pod kameny.
 > Otevřít vstup | 7
 > Ustoupit a odejít | 8
 
