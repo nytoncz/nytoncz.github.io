@@ -322,12 +322,23 @@ function showNode(id, addToHistory = true, instant = false) {
     const choicesDiv = document.getElementById("choices");
     choicesDiv.innerHTML = "";
 
-    node.choices.forEach(choice => {
-      const btn = document.createElement("button");
-      btn.innerText = choice.text;
-      btn.onclick = () => showNode(choice.target);
-      choicesDiv.appendChild(btn);
-    });
+    if (!node.choices || node.choices.length === 0) {
+  const btn = document.createElement("button");
+  btn.innerText = "Restart";
+  btn.onclick = () => {
+    history = [];
+    localStorage.setItem("history_" + player, JSON.stringify(history));
+    showNode("start");
+  };
+  choicesDiv.appendChild(btn);
+} else {
+  node.choices.forEach(choice => {
+    const btn = document.createElement("button");
+    btn.innerText = choice.text;
+    btn.onclick = () => showNode(choice.target);
+    choicesDiv.appendChild(btn);
+  });
+}
   }
 
   if (instant) { render(); return; }
