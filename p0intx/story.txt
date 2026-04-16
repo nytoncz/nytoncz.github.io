@@ -1,0 +1,96 @@
+
+[start]
+[h2][center]Ztroskotanec[/h2][/center]
+> pokračovat | 1
+
+[1]
+Probudil ses v písku, slaný vítr ti štípal do očí a jazyk jsi měl suchý jako prach. Vzpomínky přicházely pomalu — bouře, praskání dřeva, křik posádky… a pak ticho.
+[br]
+Když ses zvedl, uviděl jsi trosky lodi rozeseté podél pobřeží. Něco z ní možná ještě půjde zachránit. Za tebou se zvedala hustá zeleň ostrova, temná a neprostupná.
+Máš dvě možnosti: vydat se k vraku, nebo do vnitrozemí.
+> Prohledat vrak | 2
+> Vydat se do džungle | 3
+
+[2]
+Vrak byl napůl ponořený ve vodě, každá vlna ho znovu a znovu narážela o skaliska. Přesto jsi dokázal vyšplhat na rozbitou palubu.
+[br]Našel jsi pár užitečných věcí: kus plachty, rezavý nůž a sud s dešťovou vodou. Když jsi se chystal odejít, všiml sis podpalubí — temného otvoru vedoucího dolů.
+> Prozkoumat podpalubí | 4
+> Vrátit se na břeh | 5
+
+[3]
+Džungle byla vlhká a plná zvuků, které jsi nedokázal identifikovat. Každý krok byl boj — liány, kořeny, hmyz.
+[br]Po chvíli jsi narazil na podivnou stezku. Nebyla přírodní — někdo ji musel vytvořit. Otázka byla kdy… a jestli tu ještě je.
+> Jít po stezce | 5
+> Ignorovat ji a jít hlouběji | 6
+
+[4]
+Podpalubí bylo temné a zatuchlé. Voda ti sahala po kotníky. Nahmatal jsi bednu — uvnitř byly staré nástroje a zvláštní kovová schránka.
+[br]Když jsi ji otevřel, našel jsi kompas. Ale neukazoval sever — ručička se neustále třásla a mířila kamsi do vnitrozemí.
+[br]Najednou se loď pohnula. Konstrukce zaskřípala.
+> Rychle utéct s kompasem | 5
+> Zůstat a hledat dál | 6
+
+[5]
+Postavil sis provizorní tábor na okraji pláže. Oheň tě uklidnil, ale v noci jsi slyšel zvuky z džungle.
+[br]Ráno jsi zjistil, že kompas (pokud ho máš) ukazuje stále stejným směrem. Ať už to znamená cokoliv, něco tě volá.
+> Následovat kompas / instinkt | 6a
+> Zůstat a zlepšit tábor | 6b
+
+[6]
+Ztratil ses. Džungle tě pohltila. Bez jasného směru jsi bloudil celé hodiny.
+[br][br]Nakonec jsi narazil na staré ruiny — kamenné zdi porostlé mechem. Uprostřed stál podivný sloup.
+> Přiblížit se ke sloupu | 6a
+> Odejít zpět k pobřeží | 6b
+
+[6a]
+Sloup byl pokrytý symboly. Když ses ho dotkl, ucítil jsi slabé vibrace.
+[br]Kompas (pokud ho máš) se zklidnil. Ukazoval přímo dolů — ke skrytému vchodu pod kameny.
+> Otevřít vstup | 7
+> Ustoupit a odejít | 8
+
+[6b]
+Rozhodl ses přežít jednoduše. Dny plynuly. Naučil ses lovit, rozdělávat oheň, sbírat vodu.
+[br]Ale jednoho dne jsi na obzoru zahlédl loď… příliš daleko.
+> Pokusit se ji přivolat signálem | 9
+> Ignorovat ji a zůstat | 10
+
+[7]
+Podzemí bylo chladné a tiché. Stěny byly hladké, nepřirozené.
+[br]Na konci chodby jsi našel místnost s podivným zařízením — něco mezi strojem a oltářem.
+> Aktivovat zařízení | 11
+> Prozkoumat místnost opatrně | 12
+
+[8]
+Opustil jsi tajemství ostrova. Možná navždy.
+[br]Ale pocit, že jsi něco důležitého minul, tě nikdy neopustil.
+> Pokračovat | 10
+
+[9]
+Rozdělal jsi obrovský oheň. Kouř stoupal vysoko.
+[br]Loď změnila směr.
+> Čekat | 13
+
+[10]
+Roky plynuly. Ostrov se stal tvým domovem.
+[br]Zapomněl jsi na minulost. Možná to bylo lepší.
+> Konec | 14
+
+[11]
+Zařízení se probudilo. Světlo tě pohltilo.
+[br]Když jsi otevřel oči, nebyl jsi na ostrově.
+> Pokračovat | 13
+
+[12]
+[br]Našel jsi staré zápisky — někdo tu byl před tebou. A varoval: „Neaktivuj to.“
+[br]Teď bylo pozdě.
+> Pokračovat | 11
+
+[13]
+Záchrana přišla — nebo něco, co se jí podobalo.
+[br]Svět, do kterého ses vrátil, nebyl stejný. Možná jsi nebyl stejný ani ty.
+END
+
+[14]
+Ostrov tě pohltil.
+[br]Stal ses jeho součástí — tichým svědkem času, který nikdo jiný nepočítá.
+END
