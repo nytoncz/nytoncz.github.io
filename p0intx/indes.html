@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>●﹒• p0intx</title>
+
+<style>
+html, body { overscroll-behavior: none; }
+
+body {
+  font-family: Tahoma;
+  background: #000;
+  color: #fff;
+  margin: 0;
+}
+
+#app {
+  max-width: 600px;
+  margin: auto;
+}
+
+/* TOPBAR */
+#topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  box-sizing: border-box;
+  padding-bottom: 1px;
+  background: linear-gradient(to bottom, #222, #000);
+}
+
+#topbar div {
+  display: flex;
+  gap: 10px;
+}
+
+.activeBtn {
+  background: #666 !important;
+}
+
+/* CONTENT */
+#content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 70px 15px 0 15px;
+  box-sizing: border-box;
+  background-color:#282828;
+}
+
+button {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 15px;
+  font-size: 16px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 10px;
+}
+
+#mapBtn, #notebookBtn, #backBtn {
+  width: auto;
+  padding: 10px;
+  font-size: 18px;
+}
+
+#text {
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.3;
+  transition: opacity 0.5s ease;
+}
+
+.fade-out { opacity: 0; }
+.fade-in { opacity: 1; }
+
+#login {
+  text-align: center;
+  padding: 15px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+input {
+  padding: 10px;
+  font-size: 16px;
+  width: 80%;
+  margin-bottom: 10px;
+}
+
+.center { text-align: center; }
+h2 { margin: 10px 0; }
+
+#text img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
+/* CHOICES */
+#choices {
+  margin-top: auto;
+  position: relative;
+  left: -15px;
+  width: calc(100% + 30px);
+  padding: 10px 15px;
+  box-sizing: border-box;
+}
+
+/* ===== FADE MODAL SYSTEM ===== */
+.fade-modal {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 60px);
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 0.25s ease;
+
+  z-index: 900;
+}
+
+.fade-modal.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* NOTES */
+#notesModal {
+  background: rgba(0,0,0,0.95);
+}
+
+textarea {
+  width: 100%;
+  height: 100%;
+  font-size: 13px;
+  padding: 10px;
+  background: #111;
+  color: white;
+  border: none;
+}
+
+/* MAP */
+#mapModal {
+  background: #111;
+}
+
+#mapWrapper {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+#mapCanvas {
+  display: block;
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<div id="login">
+  <h2>●﹒• p0intx</h2>
+  <input id="nameInput" placeholder="nickname">
+  <button onclick="startGame()">play</button>
+</div>
+
+<div id="game" style="display:none;">
+
+  <div id="topbar">●﹒• 
+    <div id="playerName" style="font-size: 0px"></div>
+    <div>
+      <button id="backBtn" onclick="goBack()">⬅️</button>
+      <button id="mapBtn" onclick="toggleMap()">🗺️</button>
+      <button id="notebookBtn" onclick="toggleNotes()">📓</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <div id="text">loading...</div>
+    <div id="choices"></div>
+  </div>
+
+</div>
+
+</div>
+
+<div id="notesModal" class="fade-modal">
+  <textarea id="notes" placeholder="your notes..."></textarea>
+</div>
+
+<div id="mapModal" class="fade-modal">
+  <div id="mapWrapper">
+    <canvas id="mapCanvas"></canvas>
+  </div>
+</div>
+
+<script>
+let story = {};
+let current = "start";
+let player = "";
+let storyLoaded = false;
+let history = [];
+let isAnimating = false;
+
+// ===== UNIVERSAL FADE =====
+function fadeIn(el) {
+  el.classList.add("open");
+  lockScroll(true);
+}
+
+function fadeOut(el) {
+  el.classList.remove("open");
+  lockScroll(false);
+}
+
+// ===== FORMAT =====
+function formatText(text) {
+  return text
+    .replace(/\[b\](.*?)\[\/b\]/g, "<strong>$1</strong>")
+    .replace(/\[i\](.*?)\[\/i\]/g, "<i>$1</i>")
+    .replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>")
+    .replace(/\[center\](.*?)\[\/center\]/g, "<div class='center'>$1</div>")
+    .replace(/\[h2\](.*?)\[\/h2\]/g, "<h2>$1</h2>")
+    .replace(/\[img\](.*?)\[\/img\]/g, "<img src='$1'>")
+    .replace(/\[br\]/g, "<br>")
+    .replace(/\[m\]/g, "&nbsp;")
+    .replace(/\n/g, "<br>");
+}
+
+// ===== SCROLL LOCK =====
+function lockScroll(lock) {
+  document.body.style.overflow = lock ? "hidden" : "auto";
+}
+
+// ===== LOAD =====
+function loadStory() {
+  return fetch("story.txt")
+    .then(res => res.text())
+    .then(parseStory);
+}
+
+function parseStory(text) {
+  const blocks = text.trim().split("\n\n");
+
+  blocks.forEach(block => {
+    const lines = block.split("\n");
+    const id = lines[0].replace("[", "").replace("]", "").trim();
+
+    let content = "";
+    let choices = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].startsWith(">")) {
+        let parts = lines[i].substring(1).split("|");
+        choices.push({ text: parts[0].trim(), target: parts[1].trim() });
+      } else if (lines[i] === "END") {
+        choices = [];
+      } else {
+        content += lines[i] + "\n";
+      }
+    }
+
+    story[id] = { content, choices };
+  });
+
+  storyLoaded = true;
+}
+
+// ===== START =====
+function startGame() {
+  player = document.getElementById("nameInput").value.trim();
+  if (!player) return;
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  document.getElementById("playerName").innerText = player;
+
+  loadStory().then(() => {
+    current = localStorage.getItem("save_" + player) || "start";
+    history = JSON.parse(localStorage.getItem("history_" + player)) || [];
+
+    const notes = localStorage.getItem("notes_" + player);
+    if (notes) document.getElementById("notes").value = notes;
+
+    showNode(current, false, true);
+  });
+}
+
+// ===== SHOW =====
+function showNode(id, addToHistory = true, instant = false) {
+  if (!storyLoaded || isAnimating) return;
+
+  if (addToHistory && current !== id) history.push(current);
+
+  current = id;
+  localStorage.setItem("save_" + player, current);
+  localStorage.setItem("history_" + player, JSON.stringify(history));
+
+  const node = story[id];
+  const textEl = document.getElementById("text");
+
+  function render() {
+    textEl.innerHTML = formatText(node.content);
+    const choicesDiv = document.getElementById("choices");
+    choicesDiv.innerHTML = "";
+
+    node.choices.forEach(choice => {
+      const btn = document.createElement("button");
+      btn.innerText = choice.text;
+      btn.onclick = () => showNode(choice.target);
+      choicesDiv.appendChild(btn);
+    });
+  }
+
+  if (instant) { render(); return; }
+
+  isAnimating = true;
+  textEl.classList.add("fade-out");
+
+  setTimeout(() => {
+    render();
+    textEl.classList.remove("fade-out");
+    textEl.classList.add("fade-in");
+
+    setTimeout(() => {
+      textEl.classList.remove("fade-in");
+      isAnimating = false;
+    }, 300);
+  }, 300);
+}
+
+// ===== BACK =====
+function goBack() {
+  if (history.length === 0 || isAnimating) return;
+  const prev = history.pop();
+  showNode(prev, false);
+}
+ 
+ function updateBackBtn() {
+  const backBtn = document.getElementById("backBtn");
+  const map = document.getElementById("mapModal");
+  const notes = document.getElementById("notesModal");
+
+  const mapOpen = map.classList.contains("open");
+  const notesOpen = notes.classList.contains("open");
+
+  backBtn.style.display = (mapOpen || notesOpen) ? "none" : "inline-block";
+}
+
+// ===== TOGGLES =====
+function toggleMap() {
+  const map = document.getElementById("mapModal");
+  const notes = document.getElementById("notesModal");
+
+  if (map.classList.contains("open")) {
+    fadeOut(map);
+  } else {
+    fadeOut(notes);
+    fadeIn(map);
+    drawMap();
+  }
+
+  updateBackBtn();
+}
+
+function toggleNotes() {
+  const notes = document.getElementById("notesModal");
+  const map = document.getElementById("mapModal");
+
+  if (notes.classList.contains("open")) {
+    fadeOut(notes);
+  } else {
+    fadeOut(map);
+    fadeIn(notes);
+  }
+
+  updateBackBtn();
+}
+
+// ===== MAP (beze změny) =====
+function drawMap() {
+  const canvas = document.getElementById("mapCanvas");
+  const ctx = canvas.getContext("2d");
+
+  let levels = {};
+  let visited = new Set();
+  let queue = [{ id: "start", depth: 0 }];
+
+  while (queue.length) {
+    let { id, depth } = queue.shift();
+    if (visited.has(id)) continue;
+
+    visited.add(id);
+
+    if (!levels[depth]) levels[depth] = [];
+    levels[depth].push(id);
+
+    (story[id]?.choices || []).forEach(c => {
+      queue.push({ id: c.target, depth: depth + 1 });
+    });
+  }
+
+  const verticalSpacing = 40;
+  const horizontalSpacing = 50;
+
+  const maxWidth = Math.max(...Object.values(levels).map(l => l.length));
+  canvas.width = maxWidth * horizontalSpacing + 200;
+  canvas.height = Object.keys(levels).length * verticalSpacing + 200;
+
+  let positions = {};
+
+  Object.keys(levels).forEach(depth => {
+    const nodes = levels[depth];
+    nodes.forEach((node, i) => {
+      positions[node] = {
+        x: i * horizontalSpacing + 100,
+        y: depth * verticalSpacing + 80
+      };
+    });
+  });
+
+  // LINKY
+  Object.keys(story).forEach(key => {
+    story[key].choices.forEach(choice => {
+      if (!positions[choice.target]) return;
+
+      const isVisited = history.includes(key) && history.includes(choice.target);
+
+      ctx.strokeStyle = isVisited ? "grey" : "#000";
+      ctx.lineWidth = isVisited ? 1 : 1;
+
+      ctx.beginPath();
+      ctx.moveTo(positions[key].x, positions[key].y);
+      ctx.lineTo(positions[choice.target].x, positions[choice.target].y);
+      ctx.stroke();
+    });
+  });
+
+  // NODY
+  Object.keys(positions).forEach(key => {
+    const { x, y } = positions[key];
+
+    ctx.beginPath();
+    ctx.arc(x, y, 18, 0, Math.PI * 2);
+
+    if (key === current) {
+      ctx.fillStyle = "grey";
+    } else if (history.includes(key)) {
+      ctx.fillStyle = "#272727";
+    } else {
+      ctx.fillStyle = "#000";
+    }
+
+    ctx.fill();
+
+
+    ctx.fillStyle = "white";
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(key, x, y + 3);
+  });
+
+  // CLICK
+  canvas.onclick = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    for (let key in positions) {
+      const dx = mx - positions[key].x;
+      const dy = my - positions[key].y;
+
+      if (Math.sqrt(dx*dx + dy*dy) < 20) {
+        toggleMap();
+        showNode(key);
+        break;
+      }
+    }
+  };
+}
+
+// ===== NOTES AUTOSAVE =====
+document.getElementById("notes").addEventListener("input", () => {
+  if (player) {
+    localStorage.setItem("notes_" + player, document.getElementById("notes").value);
+  }
+});
+</script>
+
+</body>
+</html>
