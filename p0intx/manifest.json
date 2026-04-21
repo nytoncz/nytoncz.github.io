@@ -1,0 +1,16 @@
+{
+  "name": "p0intx",
+  "short_name": "p0intx",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#111",
+  "theme_color": "#000",
+  "display_override": ["standalone", "fullscreen"],
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

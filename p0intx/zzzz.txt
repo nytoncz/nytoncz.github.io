@@ -1,0 +1,118 @@
+Jo – teď to máš zbytečně „copy-paste“ pro každé toggle. Dá se to elegantně sjednotit do jedné univerzální funkce, která:
+
+1. zavře všechny modaly
+2. otevře jen ten správný
+3. nastaví aktivní tlačítko
+4. případně zavolá nějakou extra funkci (např. `drawMap()` nebo `updateGrafImage()`)
+
+### 🔧 Univerzální řešení
+
+Vytvoř si jednu funkci:
+
+```javascript
+function toggleModal(modalId, btnId, onOpenCallback = null) {
+  const modals = [
+    "grafModal",
+    "mapModal",
+    "notesModal",
+    "helpModal",
+    "summaryModal"
+  ];
+
+  const currentModal = document.getElementById(modalId);
+
+  resetActiveButtons();
+
+  if (currentModal.classList.contains("open")) {
+    fadeOut(currentModal);
+  } else {
+    // zavři všechny ostatní
+    modals.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) fadeOut(el);
+    });
+
+    // otevři aktuální
+    fadeIn(currentModal);
+
+    // aktivní tlačítko
+    if (btnId) {
+      document.getElementById(btnId)?.classList.add("activeBtn");
+    }
+
+    // extra akce (např. mapa, graf…)
+    if (onOpenCallback) {
+      onOpenCallback();
+    }
+  }
+
+  updateBackBtn();
+}
+```
+
+---
+
+### ✨ Použití místo všech toggle funkcí
+
+Teď místo 5 funkcí máš jen volání:
+
+```javascript
+function toggleMap() {
+  toggleModal("mapModal", "mapBtn", drawMap);
+}
+
+function toggleGraf() {
+  toggleModal("grafModal", "grafBtn", updateGrafImage);
+}
+
+function toggleNotes() {
+  toggleModal("notesModal", "notesBtn");
+}
+
+function toggleHelp() {
+  toggleModal("helpModal", "helpBtn");
+}
+
+function toggleSummary() {
+  toggleModal("summaryModal", "summaryBtn");
+}
+```
+
+---
+
+### ➕ Přidání nové (např. `toggleNews`)
+
+Stačí:
+
+```javascript
+function toggleNews() {
+  toggleModal("newsModal", "newsBtn");
+}
+```
+
+A hotovo. Žádné další kopírování logiky.
+
+---
+
+### 💡 Bonus (ještě čistší varianta)
+
+Můžeš jít ještě dál a úplně zrušit ty wrapper funkce:
+
+```html
+<button onclick="toggleModal('mapModal','mapBtn', drawMap)">Mapa</button>
+<button onclick="toggleModal('grafModal','grafBtn', updateGrafImage)">Graf</button>
+<button onclick="toggleModal('notesModal','notesBtn')">Poznámky</button>
+```
+
+---
+
+### Shrnutí
+
+To, co máš teď, funguje – ale škálování by bylo peklo.
+Tahle verze ti umožní:
+
+* přidat nový modal za 10 sekund
+* nemít duplicitní kód
+* mít všechno řízené jedním místem
+
+Jestli chceš, můžeme to posunout ještě dál (např. úplně dynamický systém bez hardcoded seznamu modalů).

@@ -1,1 +1,88 @@
+<!DOCTYPE html>
+<html lang="cs">
+ <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#000" />
+  <title>●﹒• p0intx</title>
+  <!-- p0intx (opensource)   -->
+  <!-- web miniapp for creating and reading interactive books. -->
+  <!-- created with help of chatgpt.  -->
+  <!-- copy, modify, use... allowed. -->
+  <!-- dxntlxxk.notynk. prague, 2026 -->
+  <link rel="stylesheet" href="ss.css" />
+  <script src="jsfunc.js" defer></script>
+<style>
 
+</style>
+ </head>
+ <body class="light">
+  <div id="loader"></div>
+  <div id="app">
+   <div id="game" style="display: none">
+    <div id="topbar">
+     ●﹒•
+     <div>
+      <button id="backBtn" onclick="goBack()">⬅️</button>
+                  <div id="healthBar" style="display:none;">
+       <div id="healthFill"></div>
+       <div id="healthText"></div>
+      </div>
+      <button id="mapBtn" onclick="toggleMap()" style="display: none">🖼️</button>
+      <button id="helpBtn" onclick="toggleHelp()">⚙️</button>
+      <button id="grafBtn" onclick="toggleGraf()" style="display: none">🌎 </button>
+      <button id="notesBtn" onclick="toggleNotes()">📜</button>
+
+     </div>
+    </div>
+    <div id="content">
+     <div id="text">loading...</div>
+     <div id="choices"></div>
+    </div>
+   </div>
+  </div>
+  <div id="notesModal" class="fade-modal">
+   <textarea id="notes" placeholder="your notes..."></textarea>
+  </div>
+  <div id="mapModal" class="fade-modal">
+   <div id="mapWrapper">
+    <canvas id="mapCanvas"></canvas>
+   </div>
+  </div>
+  <div id="helpModal" class="fade-modal">
+   <div style="padding: 15px">
+    <br />
+    <table style="width: 100%">
+     <tr style="vertical-align: bottom">
+      <td></td>
+      <td>
+       <button onclick="setFontSize('small')"><small>text-</small></button>
+       <button onclick="setFontSize('medium')">text</button>
+       <button onclick="setFontSize('large')"><big>text+</big></button>
+      </td>
+      <td></td>
+      <td>
+       <button onclick="toggleTheme()"><big>🌗</big></button>
+      </td>
+     </tr>
+    </table>
+    <br />
+    <button onclick="resetAllData()">
+     🧹 odstranit záložku a vygumovat papír
+    </button>
+   </div>
+  </div>
+  <div id="grafModal" class="fade-modal">
+   <div style="padding: 10px; text-align: center">
+    <img id="grafImg" style="max-width: 100%; border-radius: 10px" />
+   </div>
+  </div>
+  <div id="summaryModal" class="fade-modal">
+   <div id="summaryContent" style="padding: 15px"></div>
+  </div>
+<script>
+
+</script>
+ </body>
+</html>
