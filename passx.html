@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Password Generator</title>
+<title>passx</title>
 
 <style>
   html,
@@ -13,7 +13,7 @@ body {
 }
 body {
   font-family: system-ui, sans-serif;
-  background: #f5f7fa;
+  background: #d1ccc0;
   margin: 0;
   padding: 16px;
 }
@@ -24,7 +24,7 @@ body {
 }
 
 .card {
-  background: white;
+  background: #ffffff60;
   padding: 14px;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
@@ -35,8 +35,8 @@ button {
   padding: 10px;
   border: none;
   border-radius: 10px;
-  background: #007aff;
-  color: white;
+  background: #d1ccc0;
+  color: #4b4b4b;
   font-size: 16px;
 }
 
@@ -80,7 +80,7 @@ button {
 
 /* PASSWORD */
 .password {
-  background: #eef1f5;
+  background: #d1ccc0;
   padding: 10px;
   border-radius: 8px;
   margin-bottom: 8px;
@@ -106,9 +106,10 @@ button {
 
 .modal {
   width: 80%;
-  height: 80%;
-  background: white;
+  height: 50%;
+  background: #d1ccc0;
   border-radius: 16px;
+ font-weight: bold;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -127,12 +128,13 @@ button {
 }
 
 .key {
-  background: #eef1f5;
+  background: #ffffff80;
   padding: 16px;
   text-align: center;
   border-radius: 10px;
   font-size: 20px;
 }
+ 
 </style>
 </head>
 
@@ -141,7 +143,7 @@ button {
 <div class="app">
 
 <div class="card">
-  <button class="full-btn" onclick="manualRefresh()">Password Generator</button>
+  <button class="full-btn" onclick="manualRefresh()">passx regenerator</button>
 </div>
 
 <div class="card options" id="options"></div>
@@ -153,6 +155,7 @@ button {
   <button onclick="setLength(24)">24</button>
   <button onclick="setLength(48)">48</button>
   <button onclick="setLength(96)">96</button>
+   <button onclick="setLength(256)">256</button>
 </div>
 
 <div class="card length-control">
@@ -189,18 +192,18 @@ button {
 
 <script>
 const CONFIG = {
-  defaultLength: 16,
-  minLength: 4,
-  maxLength: 128,
-  passwordCount: 6,
+  defaultLength: 8,
+  minLength: 1,
+  maxLength: 256,
+  passwordCount: 3,
   refreshInterval: 60000,
 
-  charsets: [
-    { id: "upper", label: "A", chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", default: true },
-    { id: "lower", label: "a", chars: "abcdefghijklmnopqrstuvwxyz", default: true },
-    { id: "numbers", label: "1", chars: "0123456789", default: true },
-    { id: "symbols1", label: "!?", chars: "!@#$%^&*", default: true },
-    { id: "symbols2", label: "#-", chars: "+_=[]{}<>:-?", default: false }
+charsets: [
+    { id: "upper", label: "ABZ", chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", default: true },
+    { id: "lower", label: "abz", chars: "abcdefghijklmnopqrstuvwxyz", default: true },
+    { id: "numbers", label: "123", chars: "0123456789", default: true },
+    { id: "symbols1", label: "_?!", chars: "!@#$%&*?_-", default: false },
+    { id: "symbols2", label: "#:✓", chars: "+=[]{}<>:;.,/\\|^~", default: false }
   ]
 };
 
@@ -380,4 +383,4 @@ resetTimer();
 </script>
 
 </body>
-  </html>
+</html>
