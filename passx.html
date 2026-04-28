@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Password Generator</title>
+
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #f5f7fa;
+  margin: 0;
+  padding: 16px;
+}
+
+.app {
+  max-width: 420px;
+  margin: auto;
+}
+
+.card {
+  background: white;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  margin-bottom: 12px;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #007aff;
+  color: white;
+  font-size: 16px;
+}
+
+.full-btn {
+  width: 100%;
+}
+
+.options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+}
+
+/* QUICK LENGTH */
+.quick-length {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.quick-length button {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+}
+
+/* LENGTH */
+.length-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.length-value {
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  flex: 1;
+}
+
+/* PASSWORD */
+.password {
+  background: #eef1f5;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: opacity 0.5s;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.fade-out {
+  opacity: 0;
+}
+
+/* MODAL */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: #00000080;
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  width: 80%;
+  height: 80%;
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.display {
+  font-size: 32px;
+  text-align: center;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.key {
+  background: #eef1f5;
+  padding: 16px;
+  text-align: center;
+  border-radius: 10px;
+  font-size: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="card">
+  <button class="full-btn" onclick="manualRefresh()">Password Generator</button>
+</div>
+
+<div class="card options" id="options"></div>
+
+<!-- QUICK LENGTH -->
+<div class="card quick-length">
+  <button onclick="setLength(8)">8</button>
+  <button onclick="setLength(12)">12</button>
+  <button onclick="setLength(24)">24</button>
+  <button onclick="setLength(48)">48</button>
+  <button onclick="setLength(96)">96</button>
+</div>
+
+<div class="card length-control">
+  <button onclick="changeLength(-1)">−</button>
+  <div class="length-value" id="length">16</div>
+  <button onclick="changeLength(1)">+</button>
+</div>
+
+<div class="card" id="results"></div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="display" id="display"></div>
+
+    <div class="keypad">
+      <div class="key" onclick="press(1)">1</div>
+      <div class="key" onclick="press(2)">2</div>
+      <div class="key" onclick="press(3)">3</div>
+      <div class="key" onclick="press(4)">4</div>
+      <div class="key" onclick="press(5)">5</div>
+      <div class="key" onclick="press(6)">6</div>
+      <div class="key" onclick="press(7)">7</div>
+      <div class="key" onclick="press(8)">8</div>
+      <div class="key" onclick="press(9)">9</div>
+      <div class="key" onclick="clearDisplay()">C</div>
+      <div class="key" onclick="press(0)">0</div>
+      <div class="key" onclick="applyValue()">OK</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CONFIG = {
+  defaultLength: 16,
+  minLength: 4,
+  maxLength: 128,
+  passwordCount: 6,
+  refreshInterval: 60000,
+
+  charsets: [
+    { id: "upper", label: "A", chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", default: true },
+    { id: "lower", label: "a", chars: "abcdefghijklmnopqrstuvwxyz", default: true },
+    { id: "numbers", label: "1", chars: "0123456789", default: true },
+    { id: "symbols1", label: "!?", chars: "!@#$%^&*", default: true },
+    { id: "symbols2", label: "#-", chars: "+_=[]{}<>:-?", default: false }
+  ]
+};
+
+const optionsEl = document.getElementById("options");
+const resultsEl = document.getElementById("results");
+const lengthEl = document.getElementById("length");
+const modalBg = document.getElementById("modalBg");
+const display = document.getElementById("display");
+
+let length = CONFIG.defaultLength;
+let refreshTimer;
+let tempValue = "";
+
+/* OPTIONS */
+function initOptions() {
+  CONFIG.charsets.forEach(set => {
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="checkbox" id="${set.id}"> ${set.label}`;
+    optionsEl.appendChild(label);
+  });
+}
+
+/* SETTINGS */
+function loadSettings() {
+  const saved = JSON.parse(localStorage.getItem("pw-settings") || "{}");
+
+  CONFIG.charsets.forEach(set => {
+    document.getElementById(set.id).checked = saved[set.id] ?? set.default;
+  });
+
+  length = saved.length ?? CONFIG.defaultLength;
+}
+
+function saveSettings() {
+  const data = { length };
+
+  CONFIG.charsets.forEach(set => {
+    data[set.id] = document.getElementById(set.id).checked;
+  });
+
+  localStorage.setItem("pw-settings", JSON.stringify(data));
+}
+
+/* LENGTH */
+function updateLength() {
+  lengthEl.innerText = length;
+}
+
+function changeLength(val) {
+  setLength(length + val);
+}
+
+function setLength(val) {
+  length = Math.max(CONFIG.minLength, Math.min(CONFIG.maxLength, val));
+  updateLength();
+  saveSettings();
+  renderAll();
+  resetTimer();
+}
+
+/* MODAL */
+lengthEl.onclick = () => {
+  tempValue = "";
+  display.innerText = "";
+  modalBg.style.display = "flex";
+};
+
+modalBg.onclick = e => {
+  if (e.target === modalBg) modalBg.style.display = "none";
+};
+
+function press(n) {
+  tempValue += n;
+  display.innerText = tempValue;
+}
+
+function clearDisplay() {
+  tempValue = "";
+  display.innerText = "";
+}
+
+function applyValue() {
+  const val = parseInt(tempValue);
+  if (!isNaN(val)) setLength(val);
+  modalBg.style.display = "none";
+}
+
+/* RANDOM */
+function rand(max) {
+  const a = new Uint32Array(1);
+  crypto.getRandomValues(a);
+  return a[0] % max;
+}
+
+/* GENERATE */
+function generatePassword() {
+  let chars = "";
+
+  CONFIG.charsets.forEach(set => {
+    if (document.getElementById(set.id).checked) {
+      chars += set.chars;
+    }
+  });
+
+  if (!chars) return "Vyber typ";
+
+  let pw = "";
+  for (let i = 0; i < length; i++) {
+    pw += chars[rand(chars.length)];
+  }
+  return pw;
+}
+
+/* RENDER */
+function renderAll() {
+  resultsEl.classList.add("fade-out");
+
+  setTimeout(() => {
+    resultsEl.innerHTML = "";
+
+    for (let i = 0; i < CONFIG.passwordCount; i++) {
+      const pw = generatePassword();
+      const div = document.createElement("div");
+
+      div.className = "password";
+      div.innerText = pw;
+
+      div.onclick = () => {
+        navigator.clipboard.writeText(pw);
+
+        div.classList.add("fade-out");
+        setTimeout(() => {
+          div.innerText = generatePassword();
+          div.classList.remove("fade-out");
+        }, 200);
+
+        resetTimer();
+      };
+
+      resultsEl.appendChild(div);
+    }
+
+    resultsEl.classList.remove("fade-out");
+  }, 500);
+}
+
+/* TIMER */
+function resetTimer() {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    renderAll();
+    resetTimer();
+  }, CONFIG.refreshInterval);
+}
+
+/* MANUAL */
+function manualRefresh() {
+  renderAll();
+  resetTimer();
+}
+
+/* LISTENER */
+document.addEventListener("change", e => {
+  if (e.target.type === "checkbox") {
+    saveSettings();
+    renderAll();
+    resetTimer();
+  }
+});
+
+/* INIT */
+initOptions();
+loadSettings();
+updateLength();
+renderAll();
+resetTimer();
+</script>
+
+</body>
+  </html>
