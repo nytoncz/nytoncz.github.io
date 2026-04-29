@@ -133,13 +133,8 @@ body {
       </div>
     </div>
     <script>
-      //////////////////////////////
-      // CLOCK UI
-      //////////////////////////////
-      
-      const clock = document.getElementById("clock");
-      
-      // ciferník
+    const clock = document.getElementById("clock");
+
       for (let i = 1; i <= 12; i++) {
         const n = document.createElement("div");
         n.className = "number";
@@ -174,10 +169,7 @@ body {
       
       setInterval(updateClock, 1000);
       updateClock();
-      
-      //////////////////////////////
-      // AUDIO ENGINE (DAW STYLE)
-      //////////////////////////////
+
       
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const buffers = {};
@@ -241,10 +233,8 @@ function play(file, offset = 0, volume = 1) {
 function changeVolume(delta) {
   masterVolume = Math.min(1, Math.max(0, masterVolume + delta));
 
-  // zaokrouhlení na 0.1
   masterVolume = Math.round(masterVolume * 10) / 10;
 
-  // UI text
   volumeDisplay.innerText = "vol:" + masterVolume.toFixed(1);
   volumeDisplay.style.opacity = 1;
 
@@ -253,7 +243,6 @@ function changeVolume(delta) {
     volumeDisplay.style.opacity = 0;
   }, 1000);
 
-  // test zvuk (vezme první dostupný)
   const firstSound = Object.keys(buffers)[0];
   if (firstSound) {
     play(firstSound, 0);
@@ -265,15 +254,11 @@ clock.addEventListener("click", (e) => {
   const x = e.clientX - rect.left;
 
   if (x < rect.width / 2) {
-    changeVolume(-0.1); // levá strana ↓
+    changeVolume(-0.1); 
   } else {
-    changeVolume(0.1); // pravá strana ↑
+    changeVolume(0.1); 
   }
 });
-      
-      //////////////////////////////
-      // SCHEDULE
-      //////////////////////////////
       
       let schedule = [];
       
@@ -309,10 +294,6 @@ clock.addEventListener("click", (e) => {
       
           preload(all);
         });
-      
-      //////////////////////////////
-      // DAW SCHEDULER
-      //////////////////////////////
       
       let fired = -1;
       
