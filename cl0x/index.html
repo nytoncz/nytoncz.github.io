@@ -2,9 +2,9 @@
 <html lang="cs">
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>⌚cl0x</title>
-  <!-- cl0x -->
+  <!-- cl0x (opensource)   -->
   <!-- web miniapp cl0x for desktop. -->
   <!-- show time and play bells. -->  
   <!-- created with help of chatgpt.  -->
@@ -13,8 +13,14 @@
   <style>
     html,
 body {
- overscroll-behavior: none;
- height: 100%;
+     overscroll-behavior: none;
+     touch-action: manipulation;
+     width: 100%;
+     height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
 }
       * { box-sizing: border-box; }
       body {
@@ -32,7 +38,7 @@ body {
       #startScreen {
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.83);
+      background: rgba(0,0,0,0.53);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -95,12 +101,30 @@ body {
       .hour { width: 30%; height: 2vmin; margin-top: -0.5vmin; border-radius:40%;background-color: #ADBAC7;}
       .minute { width: 50%; height: 1vmin; margin-top: -0.35vmin; border-radius:40%; background-color: #ADBAC7;}
       .second { width: 50%; height: 0.4vmin; margin-top: -0.2vmin; background-color: #768490;}
+      
+#volumeDisplay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  z-index: 9999;     
+  
+  color: white;
+  font-size: 5vmin;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  text-shadow: 0px 0px 10px rgba(0, 0, 0)
+}
     </style>
   </head>
   <body>
     <div id="startScreen">
-      <h1>enable cl0x</h1>
+      <h1>click for watches</h1>
     </div>
+    
+<div id="volumeDisplay">vol:0.5</div>
     <div class="app">
       <div class="clock" id="clock">
         <div class="hand hour"></div>
@@ -159,6 +183,10 @@ body {
       const buffers = {};
       let unlocked = false;
       
+let masterVolume = 0.5;
+const volumeDisplay = document.getElementById("volumeDisplay");
+let volumeTimeout;
+
       async function warmup() {
         const b = audioCtx.createBuffer(1,1,22050);
         const s = audioCtx.createBufferSource();
@@ -192,16 +220,56 @@ body {
         files.forEach(loadSound);
       }
       
-      function play(file, offset = 0) {
-        const buf = buffers[file];
-        if (!buf) return;
-      
-        const src = audioCtx.createBufferSource();
-        src.buffer = buf;
-        src.connect(audioCtx.destination);
-      
-        src.start(audioCtx.currentTime + offset);
-      }
+
+function play(file, offset = 0, volume = 1) {
+  const buf = buffers[file];
+  if (!buf) return;
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.value = masterVolume * volume;
+
+  src.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  src.start(audioCtx.currentTime + offset);
+}
+
+
+function changeVolume(delta) {
+  masterVolume = Math.min(1, Math.max(0, masterVolume + delta));
+
+  // zaokrouhlení na 0.1
+  masterVolume = Math.round(masterVolume * 10) / 10;
+
+  // UI text
+  volumeDisplay.innerText = "vol:" + masterVolume.toFixed(1);
+  volumeDisplay.style.opacity = 1;
+
+  clearTimeout(volumeTimeout);
+  volumeTimeout = setTimeout(() => {
+    volumeDisplay.style.opacity = 0;
+  }, 1000);
+
+  // test zvuk (vezme první dostupný)
+  const firstSound = Object.keys(buffers)[0];
+  if (firstSound) {
+    play(firstSound, 0);
+  }
+}
+
+clock.addEventListener("click", (e) => {
+  const rect = clock.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+
+  if (x < rect.width / 2) {
+    changeVolume(-0.1); // levá strana ↓
+  } else {
+    changeVolume(0.1); // pravá strana ↑
+  }
+});
       
       //////////////////////////////
       // SCHEDULE
