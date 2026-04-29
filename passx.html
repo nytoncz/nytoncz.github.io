@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -16,17 +16,19 @@ body {
  font-weight: bold;
   background: #d1ccc0;
   margin: 0;
-  padding: 10px;
+  padding: 4px;
 }
 
 .app {
   max-width: 420px;
   margin: auto;
 }
+ 
+.label {background-color:white}
 
 .card {
   background: #ffffff60;
-  padding: 14px;
+  padding: 3px;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
   margin-bottom: 2px;
@@ -38,7 +40,7 @@ button {
   border: none;
   border-radius: 10px;
   background: #d1ccc0;
-  color: #4b4b4b;
+  color: #000;
   font-size: 14px;
  font-weight:bold;
 }
@@ -50,7 +52,8 @@ button {
 .options {
   display: flex;
   justify-content: space-between;
-  font-size: 18px;
+  font-size: 15px;
+  padding: 9px;
 }
 
 /* QUICK LENGTH */
@@ -149,7 +152,6 @@ button {
   <button class="full-btn" onclick="manualRefresh()">passx regenerator</button>
 </div>
 
-<div class="card options" id="options"></div>
 
 <!-- QUICK LENGTH -->
 <div class="card quick-length">
@@ -160,15 +162,14 @@ button {
   <button onclick="setLength(96)">96</button>
    <button onclick="setLength(256)">256</button>
 </div>
-
 <div class="card length-control">
   <button onclick="changeLength(-1)">−</button>
   <div class="length-value" id="length">16</div>
   <button onclick="changeLength(1)">+</button>
 </div>
+<div class="card options" id="options"></div>
 
 <div class="card" id="results"></div>
-
 </div>
 
 <!-- MODAL -->
@@ -198,7 +199,7 @@ const CONFIG = {
   defaultLength: 8,
   minLength: 1,
   maxLength: 256,
-  passwordCount: 9,
+  passwordCount: 12,
   refreshInterval: 60000,
 
 charsets: [
@@ -224,7 +225,7 @@ let tempValue = "";
 function initOptions() {
   CONFIG.charsets.forEach(set => {
     const label = document.createElement("label");
-    label.innerHTML = `<input type="checkbox" id="${set.id}"> ${set.label}`;
+    label.innerHTML = ` <input type="checkbox" id="${set.id}"> ${set.label}`;
     optionsEl.appendChild(label);
   });
 }
