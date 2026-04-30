@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>:| themx</title>
+
+<style>
+:root {
+    --topbar-h: 60px;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: grey;
+    color: white;
+}
+
+.topbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: var(--topbar-h);
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    z-index: 1000;
+}
+
+.topbar .center {
+    display: flex;
+    gap: 10px;
+}
+
+.menu {
+    position: fixed;
+    top: 0;
+    right: -60%;
+    width: 60%;
+    height: 100%;
+    background: #222;
+    transition: 0.3s;
+    z-index: 999;
+}
+.menu.open { right: 0; }
+
+.list {
+    margin-top: var(--topbar-h);
+}
+
+.theme {
+    padding: 10px;
+    border-bottom: 1px solid #222;
+}
+
+.preview {
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+.nav { padding: 6px; font-size: 13px; }
+.content { padding: 10px; }
+
+.card {
+    padding: 10px;
+    border-radius: 2px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.btn {
+    padding: 6px;
+    text-align: center;
+    border-radius: 2px;
+    font-size: 13px;
+}
+
+.palette {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 0px;
+    box-shadow: 4px 4px 4px 5px grey;
+    gap: 0px;
+}
+
+.color {
+    aspect-ratio: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    color: white;
+    text-shadow: 0 0 3px black, 0 0 6px black;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: black;
+    padding: 10px;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <b>:| thmx</b>
+
+    <div class="center">
+        <button onclick="toggleUserSets()">my sets</button>
+        <button onclick="randomThemes()">random sets</button>
+    </div>
+
+    <button onclick="toggleMenu()">☰</button>
+</div>
+
+<div class="menu" id="menu"></div>
+<div class="list" id="list"></div>
+<div class="toast" id="toast">ctrl+c</div>
+
+<script>
+const roles = [
+    "background","surface","primaryText",
+    "secondaryText","accent","accentText","border"
+];
+
+let themes = [];
+let showingUser = false;
+
+/* DEFAULT */
+const defaultThemes = [
+  {
+    name: "white",
+    background: "#f8f9fa",
+    surface: "#ffffff",
+    primaryText: "#212529",
+    secondaryText: "#6c757d",
+    accent: "#0d6efd",
+    accentText: "#ffffff",
+    border: "#dee2e6"
+  },
+  {
+    name: "black",
+    background: "#121212",
+    surface: "#1e1e1e",
+    primaryText: "#e9ecef",
+    secondaryText: "#adb5bd",
+    accent: "#3b82f6",
+    accentText: "#ffffff",
+    border: "#333333"
+  },
+  {
+    name: "blackrose",
+    background: "#000000",
+    surface: "#121212",
+    primaryText: "#ffffff",
+    secondaryText: "#888888",
+    accent: "#bb86fc",
+    accentText: "#000000",
+    border: "#222222"
+  },
+  {
+    name: "slate", 
+    background: "#15202b",
+    surface: "#192734",
+    primaryText: "#ffffff",
+    secondaryText: "#8899a6",
+    accent: "#1d9bf0",
+    accentText: "#ffffff",
+    border: "#38444d"
+  },
+  {
+    name: "sepia",
+    background: "#f4ecd8",
+    surface: "#fcf5e5",
+    primaryText: "#5b4636",
+    secondaryText: "#8c786a",
+    accent: "#a0522d",
+    accentText: "#ffffff",
+    border: "#e3d3b6"
+  }
+];
+/* INIT */
+function init() {
+    loadDefault();
+}
+
+function loadDefault() {
+    showingUser = false;
+    themes = defaultThemes.map(t => ({...t}));
+    render();
+}
+
+function loadUser() {
+    let saved = JSON.parse(localStorage.getItem("themes")) || [];
+
+    if (saved.length === 0) {
+        // fallback → default themes
+        showingUser = false;
+        themes = defaultThemes.map(t => ({...t}));
+    } else {
+        showingUser = true;
+        themes = saved;
+    }
+
+    render();
+}
+
+/* TOGGLE */
+function toggleUserSets() {
+    showingUser ? loadDefault() : loadUser();
+}
+
+/* RANDOM = CELÁ NOVÁ SADA */
+function randomThemes() {
+    showingUser = false;
+    themes = [];
+
+    for(let i=0;i<10;i++){
+        themes.push(generateTheme());
+    }
+
+    render();
+}
+
+/* GENERATE THEME */
+function generateTheme(){
+    function r(){ return "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6,"0"); }
+
+    return {
+        name:"random",
+        background:r(),
+        surface:r(),
+        primaryText:r(),
+        secondaryText:r(),
+        accent:r(),
+        accentText:r(),
+        border:r()
+    };
+}
+
+/* RENDER */
+function render() {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    themes.forEach(t => {
+
+        const wrap = document.createElement("div");
+        wrap.className = "theme";
+
+        const p = document.createElement("div");
+        p.className = "preview";
+        p.style.background = t.background;
+
+        const nav = document.createElement("div");
+        nav.className = "nav";
+        nav.style.color = t.primaryText;
+        nav.innerText = t.name || "theme";
+
+        const content = document.createElement("div");
+        content.className = "content";
+
+        const card = document.createElement("div");
+card.className = "card";
+
+card.style.background = t.surface;
+card.style.border = "1px solid " + t.border;
+card.style.color = t.primaryText; 
+  
+card.textContent = "Many types of grass grow at a steady and predictable pace depending on soil moisture and the intensity of sunlight."; 
+
+
+        const sub = document.createElement("div");
+        sub.style.color = t.secondaryText;
+        sub.innerText = "Fruit on trees goes through natural phases during the season, from blossom to ripe fruit.";
+
+        const btn = document.createElement("div");
+        btn.className = "btn";
+        btn.style.background = t.accent;
+        btn.style.color = t.accentText;
+        btn.innerText = "Button";
+
+        card.appendChild(sub);
+        card.appendChild(btn);
+        content.appendChild(card);
+
+        p.appendChild(nav);
+        p.appendChild(content);
+
+        const extra = generateExtraColors(t.accent);
+
+        const palette = document.createElement("div");
+        palette.className = "palette";
+
+        const colors = [
+            t.background,t.surface,t.primaryText,t.secondaryText,
+            t.accent,t.border,extra[0],extra[1]
+        ];
+
+        colors.forEach(c=>{
+            const el = document.createElement("div");
+            el.className="color";
+            el.style.background=c;
+            el.innerText=c;
+            el.onclick=()=>copy(c);
+            palette.appendChild(el);
+        });
+
+        wrap.appendChild(p);
+        wrap.appendChild(palette);
+        list.appendChild(wrap);
+    });
+}
+
+/* COPY */
+function copy(text) {
+    navigator.clipboard.writeText(text);
+    let t = document.getElementById("toast");
+    t.style.display="block";
+    setTimeout(()=>t.style.display="none",1000);
+}
+
+/* EXTRA COLORS */
+function generateExtraColors(base) {
+    let [h,s,l] = hexToHSL(base);
+    return [
+        hslToHex((h+10)%360,s,l),
+        hslToHex((h-10+360)%360,s,l)
+    ];
+}
+
+function hexToHSL(H) {
+    let r=parseInt(H.substr(1,2),16)/255;
+    let g=parseInt(H.substr(3,2),16)/255;
+    let b=parseInt(H.substr(5,2),16)/255;
+
+    let max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h,s,l=(max+min)/2;
+
+    if(max==min){h=s=0;}
+    else{
+        let d=max-min;
+        s=l>0.5?d/(2-max-min):d/(max+min);
+        switch(max){
+            case r:h=(g-b)/d+(g<b?6:0);break;
+            case g:h=(b-r)/d+2;break;
+            case b:h=(r-g)/d+4;break;
+        }
+        h*=60;
+    }
+    return [h,s,l];
+}
+
+function hslToHex(h,s,l){
+    let c=(1-Math.abs(2*l-1))*s;
+    let x=c*(1-Math.abs((h/60)%2-1));
+    let m=l-c/2;
+    let r=0,g=0,b=0;
+
+    if(h<60){r=c;g=x;}
+    else if(h<120){r=x;g=c;}
+    else if(h<180){g=c;b=x;}
+    else if(h<240){g=x;b=c;}
+    else if(h<300){r=x;b=c;}
+    else{r=c;b=x;}
+
+    r=Math.round((r+m)*255);
+    g=Math.round((g+m)*255);
+    b=Math.round((b+m)*255);
+
+    return "#" + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+/* MENU */
+function toggleMenu() {
+    document.getElementById("menu").classList.toggle("open");
+}
+
+document.addEventListener("click", (e)=>{
+    const menu=document.getElementById("menu");
+    if(!menu.contains(e.target) && !e.target.closest(".topbar button")){
+        menu.classList.remove("open");
+    }
+});
+
+init();
+</script>
+
+</body>
+</html>
