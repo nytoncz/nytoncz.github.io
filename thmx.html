@@ -13,7 +13,7 @@
 
 body {
     margin: 0;
-    background: grey;
+    background: white;
     color: white;
 }
 
@@ -52,8 +52,7 @@ body {
 }
 
 .theme {
-    padding: 10px;
-    border-bottom: 1px solid #222;
+    padding-bottom: 10px;
 }
 
 .preview {
@@ -62,40 +61,41 @@ body {
 }
 
 .nav { padding: 6px; font-size: 13px; }
-.content { padding: 10px; }
+.content { padding: 10px;         border-bottom:1px solid white;}
 
 .card {
     padding: 10px;
-    border-radius: 2px;
     margin-bottom: 8px;
     font-size: 13px;
+
 }
 
 .btn {
-    padding: 6px;
+    padding: 10px;
     text-align: center;
     border-radius: 2px;
     font-size: 13px;
+    width: 25%;
 }
+
 
 .palette {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    margin-top: 0px;
-    box-shadow: 4px 4px 4px 5px grey;
-    gap: 0px;
+    grid-template-columns: repeat(6, 1fr);
+    box-shadow: 0 0 3px black, 0 0 3px black;
 }
 
 .color {
-    aspect-ratio: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
+    padding: 8px 2px;
+    font-size: 12px;
+    text-align: center;
     cursor: pointer;
     color: white;
     text-shadow: 0 0 3px black, 0 0 6px black;
+    border-bottom:1px solid white;
+
 }
+
 
 .toast {
     position: fixed;
@@ -106,23 +106,46 @@ body {
     padding: 10px;
     display: none;
 }
+
+.row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.input {
+    flex: 1;
+    padding: 5px;
+    border-radius: 2px;
+    border: none;
+    font-size: 12px;
+
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-    <b>:| thmx</b>
+            <button onclick="setCategory('all')"><b>:| thmx</b></button>
+    
 
     <div class="center">
-        <button onclick="toggleUserSets()">my sets</button>
-        <button onclick="randomThemes()">random sets</button>
+    <button onclick="setCategory('light')">lights</button>
+    <button onclick="setCategory('dark')">darks</button>
+    <button onclick="setCategory('tinted')">tinteds</button>
+        <button onclick="randomThemes()">??</button>
+
     </div>
 
     <button onclick="toggleMenu()">☰</button>
 </div>
 
-<div class="menu" id="menu"></div>
+<div class="menu" id="menu">
+    <h3>Kategorie</h3>
+
+
+</div>
+
 <div class="list" id="list"></div>
 <div class="toast" id="toast">ctrl+c</div>
 
@@ -133,65 +156,137 @@ const roles = [
 ];
 
 let themes = [];
-let showingUser = false;
+
+let currentCategory = "all";
+let mode = "default"; 
+
 
 /* DEFAULT */
 const defaultThemes = [
-  {
-    name: "white",
-    background: "#f8f9fa",
-    surface: "#ffffff",
-    primaryText: "#212529",
-    secondaryText: "#6c757d",
-    accent: "#0d6efd",
-    accentText: "#ffffff",
-    border: "#dee2e6"
-  },
-  {
-    name: "black",
-    background: "#121212",
-    surface: "#1e1e1e",
-    primaryText: "#e9ecef",
-    secondaryText: "#adb5bd",
-    accent: "#3b82f6",
-    accentText: "#ffffff",
-    border: "#333333"
-  },
-  {
-    name: "blackrose",
-    background: "#000000",
-    surface: "#121212",
-    primaryText: "#ffffff",
-    secondaryText: "#888888",
-    accent: "#bb86fc",
-    accentText: "#000000",
-    border: "#222222"
-  },
-  {
-    name: "slate", 
-    background: "#15202b",
-    surface: "#192734",
-    primaryText: "#ffffff",
-    secondaryText: "#8899a6",
-    accent: "#1d9bf0",
-    accentText: "#ffffff",
-    border: "#38444d"
-  },
-  {
-    name: "sepia",
-    background: "#f4ecd8",
-    surface: "#fcf5e5",
-    primaryText: "#5b4636",
-    secondaryText: "#8c786a",
-    accent: "#a0522d",
-    accentText: "#ffffff",
-    border: "#e3d3b6"
-  }
+
+  {name: "base-light",category:"light",
+    background: "#e6e6e6",surface: "#ffffff",
+    primaryText: "#000000",secondaryText: "#606060",
+    accent: "#cccccc",border: "#a1a1a1"},
+
+{name: "modern-grey",category:"light",
+    background: "#F8F9FA",surface: "#FFFFFF",
+    primaryText: "#212529",secondaryText: "#6C757D",
+    accent: "#cccccc",border: "#a1a1a1"},
+    
+{name: "pass-x",category:"light",
+    background: "#d1ccc0",surface: "#e2dfd8",
+    primaryText: "#000000",secondaryText: "#6C757D",
+    accent: "#d1ccc0",border: "#a1a1a1"},
+    
+{name: "sepia-light",category:"light",
+    background: "#f2f0e4",surface: "#fcfbf4",
+    primaryText: "#2d2d2d",secondaryText: "#7a7a7a",
+    accent: "#f2f0e4",border: "#fcf5e5"},
+    
+  {name: "sepia",category:"light",
+    background: "#f4ecd8",surface: "#fcf5e5",
+    primaryText: "#5b4636",secondaryText: "#8c786a",
+    accent: "#e3d3b6",border: "#e3d3b6"},
+    
+{name: "sunny-cream",category:"light",
+    background: "#FFF6E6",surface: "#FFFCF5",
+    primaryText: "#453D32",secondaryText: "#8C7E69",
+    accent: "#F2E3C9",border: "#EBD9B9"},
+    
+    
+{name: "soft-apricot",category:"light",
+    background: "#FFF5EC",surface: "#FFFFFF",
+    primaryText: "#43342E",secondaryText: "#8C7369",
+    accent: "#FFD8B8",border: "#F0E0D4"}, 
+
+{name: "soft-ice",category: "light",
+background: "#F4F7F9",surface: "#FFFFFF",
+  primaryText: "#2D3436",secondaryText: "#636E72",
+  accent: "#D1DCE5",border: "#E1E8ED"},
+  
+{name: "arctic-ice",category:"light",
+    background: "#E8F1F8",surface: "#F4F9FF",
+    primaryText: "#1A2B3C",secondaryText: "#576A7E",
+    accent: "#BDD3E6",border: "#A9C1D6"},
+    
+
+  {name: "cloud-blue",category:"light",
+    background: "#E6EBFF",surface: "#F2F5FF",
+    primaryText: "#2E3345",secondaryText: "#69718C",
+    accent: "#D0D7F2",border: "#C5CDE0"},  
+    
+{name: "soft-rose",category:"light",
+    background: "#FFE6E6",surface: "#FFF0F0",
+    primaryText: "#4A3232",secondaryText: "#8C7171",
+    accent: "#F5D1D1",border: "#EBCBCB"}, 
+    
+
+  {name: "mint-whisper",category:"light",
+    background: "#F1FFE6",surface: "#F9FFF5",
+    primaryText: "#354032",secondaryText: "#6E7D69",
+    accent: "#D9EBD0",border: "#CFE0C5"},
+    
+{name: "midnightsky",category:"dark",
+    background: "#0B1117",surface: "#161B22",
+    primaryText: "#F0F6FC",secondaryText: "#8B949E",
+    accent: "#1F2937",border: "#30363D"},
+
+{name: "twilight-blue",category:"dark",
+    background: "#1C252E",surface: "#2A3540",
+    primaryText: "#F0F6FC",secondaryText: "#94A3B8",
+    accent: "#334155",border: "#3E4C59"},    
+
+{name: "burnt-amber",category:"dark",
+    background: "#1A1412",surface: "#2D2420",
+    primaryText: "#F2EBE9",secondaryText: "#A6938D",
+    accent: "#4A3933",border: "#3D302B"},  
+    
+{name: "x-gray",category:"dark",
+    background: "#212121",surface: "#2D2D2D",
+    primaryText: "#E0E0E0",secondaryText: "#9E9E9E",
+    accent: "#424242",border: "#333333"},    
+    
+    {name: "dark-mid",category: "dark",
+  background: "#212529", surface: "#495057", 
+  primaryText: "#8A9199", secondaryText: "#E0E2E5",
+  accent: "#212529", border: "#7b838a"},
+
+    
+  {name: "dark-base",category:"dark",
+    background: "#3D4142",surface: "#1e1e1e",
+    primaryText: "#F5F5F5",secondaryText: "#adb5bd",
+    accent: "#575B5D",border: "#333333"},    
+    
+{name: "dark-dark",category:"dark",
+    background: "#181818",surface: "#212121",
+    primaryText: "#FFFFFF",secondaryText: "#AAAAAA",
+    accent: "#3D3D3D",border: "#505050"}
+    
+
+    
 ];
 /* INIT */
 function init() {
-    loadDefault();
+    loadByCategory();
 }
+
+
+
+function loadByCategory() {
+    mode = "default";
+
+    if (currentCategory === "all") {
+        themes = defaultThemes.map(t => ({...t}));
+    } else {
+        themes = defaultThemes
+            .filter(t => t.category === currentCategory)
+            .map(t => ({...t}));
+    }
+
+    render();
+}
+
 
 function loadDefault() {
     showingUser = false;
@@ -200,15 +295,14 @@ function loadDefault() {
 }
 
 function loadUser() {
+    mode = "user";
+
     let saved = JSON.parse(localStorage.getItem("themes")) || [];
 
-    if (saved.length === 0) {
-        // fallback → default themes
-        showingUser = false;
-        themes = defaultThemes.map(t => ({...t}));
-    } else {
-        showingUser = true;
+    if (currentCategory === "all") {
         themes = saved;
+    } else {
+        themes = saved.filter(t => t.category === currentCategory);
     }
 
     render();
@@ -221,30 +315,45 @@ function toggleUserSets() {
 
 /* RANDOM = CELÁ NOVÁ SADA */
 function randomThemes() {
-    showingUser = false;
+    mode = "random";
     themes = [];
 
     for(let i=0;i<10;i++){
-        themes.push(generateTheme());
+        let t = generateTheme();
+        t.category = currentCategory;
+        themes.push(t);
     }
 
     render();
 }
 
+
+function setCategory(cat) {
+    currentCategory = cat;
+
+    if (mode === "user") loadUser();
+    else loadByCategory();
+}
+
+
+
 /* GENERATE THEME */
 function generateTheme(){
     function r(){ return "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6,"0"); }
 
-    return {
-        name:"random",
-        background:r(),
-        surface:r(),
-        primaryText:r(),
-        secondaryText:r(),
-        accent:r(),
-        accentText:r(),
-        border:r()
-    };
+
+return {
+    name:"random",
+    category: currentCategory,
+    background:r(),
+    surface:r(),
+    primaryText:r(),
+    secondaryText:r(),
+    accent:r(),
+    accentText:r(),
+    border:r()
+};
+
 }
 
 /* RENDER */
@@ -283,14 +392,31 @@ card.textContent = "Many types of grass grow at a steady and predictable pace de
         sub.style.color = t.secondaryText;
         sub.innerText = "Fruit on trees goes through natural phases during the season, from blossom to ripe fruit.";
 
-        const btn = document.createElement("div");
-        btn.className = "btn";
-        btn.style.background = t.accent;
-        btn.style.color = t.accentText;
-        btn.innerText = "Button";
 
-        card.appendChild(sub);
-        card.appendChild(btn);
+const row = document.createElement("div");
+row.className = "row";
+
+const input = document.createElement("input");
+input.className = "input";
+input.placeholder = "Input...";
+input.style.background = t.background;
+input.style.color = t.primaryText;
+input.style.border = "1px solid " + t.border;
+
+const btn = document.createElement("div");
+btn.className = "btn";
+btn.style.background = t.accent;
+btn.style.color = t.accentText;
+btn.style.border = "1px solid " + t.border;
+btn.innerText = "Button";
+
+row.appendChild(input);
+row.appendChild(btn);
+
+
+card.appendChild(sub);
+card.appendChild(row);
+
         content.appendChild(card);
 
         p.appendChild(nav);
@@ -303,7 +429,7 @@ card.textContent = "Many types of grass grow at a steady and predictable pace de
 
         const colors = [
             t.background,t.surface,t.primaryText,t.secondaryText,
-            t.accent,t.border,extra[0],extra[1]
+            t.accent,t.border
         ];
 
         colors.forEach(c=>{
